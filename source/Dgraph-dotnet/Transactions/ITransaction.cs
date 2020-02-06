@@ -45,6 +45,10 @@ namespace DgraphDotNet.Transactions {
         Task Discard();
         
         Task<FluentResults.Result> Commit();
+
+        IMutation NewMutation();
+
+        Task<FluentResults.Result<IDictionary<string, string>>> ApiMutate(Api.Mutation mutation);
     }
 
     public enum TransactionState { OK, Committed, Aborted, Error }

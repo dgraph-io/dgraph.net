@@ -79,6 +79,6 @@ namespace DgraphDotNet {
         /// name -> UID for any allocated nodes, or a failed result and error if
         /// there is an error.
         /// </summary>
-        Task<FluentResults.Result<IDictionary<string, string>>> SubmitTo(ITransactionWithMutations transaction);
+        Task<FluentResults.Result<IDictionary<string, string>>> SubmitTo(ITransaction transaction);
     }
 }

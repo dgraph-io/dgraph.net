@@ -49,7 +49,7 @@ Checkout the examples in `source/Dgraph-dotnet.examples`.  There's a script in `
 There's three client interfaces.  
 
 * `IDrgaphClient` for serialising objects to JSON and running queries 
-* `IDgraphMutationsClient` for the above plus individual edge mutations
+* `IDgraphClient` for the above plus individual edge mutations
 * `IDgraphBatchingClient` for the above plus batching updates
 
 Upserts are supported by all three.
@@ -110,7 +110,7 @@ If you want to form mutations based on edge additions and deletions.
 Make a mutations client giving it the address of the zero node.
 
 ```c#
-using(IDgraphMutationsClient client = DgraphDotNet.Clients.NewDgraphMutationsClient("127.0.0.1:5080")) {
+using(IDgraphClient client = DgraphDotNet.Clients.NewDgraphMutationsClient("127.0.0.1:5080")) {
     client.Connect("127.0.0.1:9080");
 ```
 
@@ -179,7 +179,7 @@ Check out the example in `source/Dgraph-dotnet.examples/MovieLensBatch`.
 
 Mostly, creating and using a `IDgraphClient` with `DgraphDotNet.Clients.NewDgraphClient()` and serializing an object model will be the right choice.
 
-Use `IDgraphMutationsClient` or `IDgraphBatchingClient` if for example you are reading data from a file into a graph and don't want to build an object model client side, or are dealing with individual edges rather then an object model.
+Use `IDgraphClient` or `IDgraphBatchingClient` if for example you are reading data from a file into a graph and don't want to build an object model client side, or are dealing with individual edges rather then an object model.
 
 If you need to create nodes with unique identifying edges, then you'll need to use `Upsert()`.
 

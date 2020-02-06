@@ -19,7 +19,7 @@ namespace MutationExamples {
     class Program {
         static async Task Main(string[] args) {
 
-            using(IDgraphMutationsClient client = DgraphDotNet.Clients.NewDgraphMutationsClient("127.0.0.1:5080")) {
+            using(IDgraphClient client = DgraphDotNet.Clients.NewDgraphClient()) {
                 client.Connect("127.0.0.1:9080");
 
                 await client.AlterSchema(
@@ -64,16 +64,18 @@ namespace MutationExamples {
                     Console.WriteLine("Hi, please enter a password for the new user");
                     var password = Console.ReadLine();
 
-                    using(var txn = client.NewTransactionWithMutations()) {
+                    using(var txn = client.NewTransaction()) {
                         var mutation = txn.NewMutation();
                         var property = Clients.BuildProperty(node, "Password", GraphValue.BuildPasswordValue(password));
                         if (property.IsFailed) {
                             // ... something went wrong
+                            Console.Write("uhh");
                         } else {
                             mutation.AddProperty(property.Value);
                             var err = await mutation.Submit();
                             if (err.IsFailed) {
                                 // ... something went wrong
+                                Console.Write(err);
                             }
                         }
                         await txn.Commit();

@@ -12,7 +12,7 @@ namespace DgraphDotNet {
 
     internal class Mutation : IMutation {
 
-        private ITransactionWithMutations transaction;
+        private ITransaction transaction;
 
         // Each request instance is a front for a Protos.request.
         private readonly Api.Mutation mutation = new Api.Mutation();
@@ -22,7 +22,7 @@ namespace DgraphDotNet {
 
         }
 
-        internal Mutation(ITransactionWithMutations transaction) {
+        internal Mutation(ITransaction transaction) {
             this.transaction = transaction;
         }
 
@@ -62,7 +62,7 @@ namespace DgraphDotNet {
             }
         }
 
-        public async Task<FluentResults.Result<IDictionary<string, string>>> SubmitTo(ITransactionWithMutations transaction) {
+        public async Task<FluentResults.Result<IDictionary<string, string>>> SubmitTo(ITransaction transaction) {
             return await transaction.ApiMutate(ApiMutation);
         }
 

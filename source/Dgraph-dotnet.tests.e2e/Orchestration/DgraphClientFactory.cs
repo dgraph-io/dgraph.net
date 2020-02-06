@@ -84,26 +84,6 @@ namespace Dgraph_dotnet.tests.e2e.Orchestration {
             }
         }
 
-        public IDgraphMutationsClient GetMutationsClient() {
-            if (ConnectionConfig.Endpoint.Equals("localhost")) {
-                var client = DgraphDotNet.Clients.NewDgraphMutationsClient("127.0.0.1:5080");
-                client.Connect("127.0.0.1:9080");
-                return client;
-            } else {
-                throw new NotImplementedException();
-            }
-        }
-
-        public IDgraphBatchingClient GetBatchingClient() {
-            if (ConnectionConfig.Endpoint.Equals("localhost")) {
-                var client = DgraphDotNet.Clients.NewDgraphBatchingClient("127.0.0.1:5080");
-                client.Connect("127.0.0.1:9080");
-                return client;
-            } else {
-                throw new NotImplementedException();
-            }
-        }
-
         private async Task CheckVersion() {
             using(var client = GetDgraphClient()) {
                 // ATM GraphSchema.io deploys out the Dgraphs, but doesn't wait

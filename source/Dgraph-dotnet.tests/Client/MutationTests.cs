@@ -13,12 +13,12 @@ namespace Dgraph_dotnet.tests.Client
 {
     public class MutationTests
     {
-        IDgraphMutationsClient client;
+        IDgraphClient client;
 
         [SetUp]
         public void Setup()
         {
-            client = Substitute.For<IDgraphMutationsClient>();
+            client = Substitute.For<IDgraphClient>();
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace Dgraph_dotnet.tests.Client
         {
             List<Edge> edges = new List<Edge>();
             List<Property> properties = new List<Property>();
-            var transaction = Substitute.For<ITransactionWithMutations>();
+            var transaction = Substitute.For<ITransaction>();
             IMutation mut = new Mutation();
 
             for (int i = 0; i < 10; i++)

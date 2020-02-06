@@ -22,13 +22,13 @@ namespace DgraphDotNet {
         public static IDgraphClient NewDgraphClient() {
             return new DgraphClient(new GRPCConnectionFactory(), new TransactionFactory());
         }
-
+        /*
         /// <summary>
         /// Create a client that can do query, JSON mutations and build individual edges into sets of
         /// mutations that are sent to the store.
         /// </summary>
         /// <returns></returns>
-        public static IDgraphMutationsClient NewDgraphMutationsClient(string zeroAddress) {
+        public static IDgraphClient NewDgraphMutationsClient(string zeroAddress) {
             var client = new DgraphMutationsClient(new GRPCConnectionFactory(), new TransactionFactory());
             client.ConnectZero(zeroAddress);
             return client;
@@ -52,7 +52,7 @@ namespace DgraphDotNet {
             var client = new DgraphBatchingClient(new GRPCConnectionFactory(), new TransactionFactory(), numBatches, batchSize);
             client.ConnectZero(zeroAddress);
             return client;
-        }
+        }*/
 
         #endregion
 

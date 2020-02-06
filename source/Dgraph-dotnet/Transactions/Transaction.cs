@@ -252,5 +252,25 @@ namespace DgraphDotNet.Transactions {
         }
 
         #endregion
+
+        // 
+        // ------------------------------------------------------
+        //                     mutations.
+        // ------------------------------------------------------
+        //
+        #region mutations
+        public IMutation NewMutation() {
+            AssertNotDisposed();
+
+            return new Mutation(this);
+        }
+
+        public async Task<FluentResults.Result<IDictionary<string, string>>> ApiMutate(Api.Mutation mutation) {
+            AssertNotDisposed();
+            
+            return await Mutate(mutation);
+        }
+
+        #endregion
     }
 }
