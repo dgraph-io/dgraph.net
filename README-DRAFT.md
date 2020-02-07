@@ -116,13 +116,16 @@ To set the schema, pass the schema into the `client.AlterSchema` function, as se
 ```c#
 var schema = "`name: string @index(exact) .";
 var result = client.AlterSchema(schema)
+
+// if (result.isSuccess)
+// if (result.isFailed)
 ```
 
-`Operation` contains other fields as well, including `DropAttr` and `DropAll`.
+The returned result object is based on the FluentResults library. You can check the status using `result.isSuccess` or `result.isFailed`. More information on the result object can be found [here](https://github.com/altmann/FluentResults).
+
+`DgraphClient` contains other fields as well, including `DropAll`.
 `DropAll` is useful if you wish to discard all the data, and start from a clean
-slate, without bringing the instance down. `DropAttr` is used to drop all the data
-related to a predicate.
-```
+slate, without bringing the instance down.
 
 ### Creating a Transaction
 
