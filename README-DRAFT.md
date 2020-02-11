@@ -90,23 +90,23 @@ public class Person
 Grab a transaction, serialize your object model to JSON, mutate the graph and commit the transaction.
 
 ```c#
-  using(var transaction = client.NewTransaction()) {
-      var json = ...serialize your object model...
-      await transaction.Mutate(json);
-      await transaction.Commit();
-  }
+using(var transaction = client.NewTransaction()) {
+    var json = ...serialize your object model...
+    await transaction.Mutate(json);
+    await transaction.Commit();
+}
 ```
 
 Or to query the graph.
 
 ```c#
-  using(var transaction = client.NewTransaction()) {
-      var res = await transaction.Query(query);
-      
-      dynamic newObjects = ...deserialize...(res.Value);
+using(var transaction = client.NewTransaction()) {
+    var res = await transaction.Query(query);
+    
+    dynamic newObjects = ...deserialize...(res.Value);
 
-      ...
-  }
+    ...
+}
 ```
 
 ### Altering the Database
@@ -129,42 +129,32 @@ slate, without bringing the instance down.
 
 ### Creating a Transaction
 
-To create a transaction, call `DgraphClient#newTxn()` method, which returns a
-new `Txn` object. This operation incurs no network overhead.
+To create a transaction, call `DgraphClient#newTransaction()` method, which returns a
+new `Transaction` object. This operation incurs no network overhead.
 
-It is good practise to call `Txn#discard()` in a `finally` block after running
-the transaction. Calling `Txn#discard()` after `Txn#commit()` is a no-op
-and you can call `Txn#discard()` multiple times with no additional side-effects.
+It is good practise to call to wrap the `Transaction` in a `using` block, so that the `Transaction.Dispose` function is called after running
+the transaction. 
 
-```js
-const txn = dgraphClient.newTxn();
-try {
-  // Do something here
-  // ...
-} finally {
-  await txn.discard();
-  // ...
+```c#
+using(var transaction = client.NewTransaction()) {
+    ...
 }
 ```
 
 ### Running a Mutation
 
-`Txn#mutate(Mutation)` runs a mutation. It takes in a `Mutation` object, which
-provides two main ways to set data: JSON and RDF N-Quad. You can choose whichever
-way is convenient.
+`Transaction.Mutate(json)` runs a mutation. It takes in a json mutation string.
 
-We define a person object to represent a person and use it in a `Mutation` object.
+We define a person object to represent a person and serialize it to a json mutation string.
 
-```js
-// Create data.
-const p = {
-    name: "Alice",
-};
+```c#
+var p = new Person(){ name: "Alice" };
 
-// Run mutation.
-const mu = new dgraph.Mutation();
-mu.setSetJson(p);
-await txn.mutate(mu);
+using(var transaction = client.NewTransaction()) {
+    var json = ...serialize your object model...
+    await transaction.Mutate(json);
+    await transaction.Commit();
+}
 ```
 
 For a more complete example with multiple fields and relationships, look at the
