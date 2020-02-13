@@ -157,39 +157,16 @@ using(var transaction = client.NewTransaction()) {
 }
 ```
 
-For a more complete example with multiple fields and relationships, look at the
-[simple] project in the `examples` folder.
-
-Sometimes, you only want to commit a mutation, without querying anything further.
-In such cases, you can use `Mutation#setCommitNow(true)` to indicate that the
-mutation must be immediately committed.
-
-`Mutation#setIgnoreIndexConflict(true)` can be applied on a `Mutation` object to
-not run conflict detection over the index, which would decrease the number of
-transaction conflicts and aborts. However, this would come at the cost of potentially
-inconsistent upsert operations.
-
-Mutation can be run using `txn.doRequest` as well.
-
-```js
-const mu = new dgraph.Mutation();
-mu.setSetJson(p);
-
-const req = new dgraph.Request();
-req.setCommitNow(true);
-req.setMutationsList([mu]);
-
-await txn.doRequest(req);
-```
+Check out the example in `source/Dgraph-dotnet.examples/MutationExample`.
 
 ### Running a Query
 
-You can run a query by calling `Txn#query(string)`. You will need to pass in a
+You can run a query by calling `Transaction.Query(string)`. You will need to pass in a
 GraphQL+- query string. If you want to pass an additional map of any variables that
-you might want to set in the query, call `Txn#queryWithVars(string, object)` with
-the variables object as the second argument.
+you might want to set in the query, call `Transaction.QueryWithVars(string, Dictionary<string,string>)` with
+the variables dictionary as the second argument.
 
-The response would contain the method `Response#getJSON()`, which returns the response JSON.
+The response would contain the response string.
 
 Let’s run the following query with a variable $a:
 
@@ -205,39 +182,19 @@ query all($a: string) {
 Run the query, deserialize the result from Uint8Array (or base64) encoded JSON and
 print it out:
 
-```js
+```c#
 // Run query.
-const query = `query all($a: string) {
+var query = "query all($a: string) {
   all(func: eq(name, $a))
   {
     name
   }
-}`;
-const vars = { $a: "Alice" };
-const res = await dgraphClient.newTxn().queryWithVars(query, vars);
-const ppl = res.getJson();
+}";
+var vars = new Dictionary<string,string>(){{ $a: "Alice" }};
+var res = await dgraphClient.NewTransaction().QueryWithVars(query, vars);
 
 // Print results.
-console.log(`Number of people named "Alice": ${ppl.all.length}`);
-ppl.all.forEach((person) => console.log(person.name));
-```
-
-This should print:
-
-```console
-Number of people named "Alice": 1
-Alice
-```
-
-You can also use `txn.doRequest` function to run the query.
-```js
-const req = new dgraph.Request();
-const vars = req.getVarsMap();
-vars.set("$a", "Alice");
-req.setQuery(query);
-
-const res = await txn.doRequest(req);
-console.log(JSON.stringify(res.getJson()));
+Console.Write(res.Value);
 ```
 
 ### Running an Upsert: Query + Mutation
@@ -248,6 +205,14 @@ Query variables could be defined and can then be used in the mutation. You can a
 
 To know more about upsert, we highly recommend going through the docs at https://docs.dgraph.io/mutations/#upsert-block.
 
+```c#
+dgraphClient.Upsert(
+  "email",
+  GraphValue.BuildStringValue("wrong_email@dgraph.io"),
+  "uid <email> \"correct_email@dgraph.io\" .",
+  ???
+)
+```
 ```js
 const query = `
   query {
@@ -267,30 +232,6 @@ req.setCommitNow(true);
 await dgraphClient.newTxn().doRequest(req);
 ```
 
-### Running a Conditional Upsert
-
-The upsert block allows specifying a conditional mutation block using an `@if` directive. The mutation is executed
-only when the specified condition is true. If the condition is false, the mutation is silently ignored.
-
-See more about Conditional Upsert [Here](https://docs.dgraph.io/mutations/#conditional-upsert).
-
-```js
-const query = `
-  query {
-      user as var(func: eq(email, "wrong_email@dgraph.io"))
-  }`
-
-const mu = new dgraph.Mutation();
-mu.setSetNquads(`uid(user) <email> "correct_email@dgraph.io" .`);
-mu.setCond(`@if(eq(len(user), 1))`);
-
-const req = new dgraph.Request();
-req.setQuery(query);
-req.addMutations(mu);
-req.setCommitNow(true);
-
-await dgraphClient.newTxn().doRequest(req);
-```
 
 ### Committing a Transaction
 
@@ -323,49 +264,6 @@ try {
 }
 ```
 
-### Cleanup Resources
-
-To cleanup resources, you have to call `DgraphClientStub#close()` individually for
-all the instances of `DgraphClientStub`.
-
-```js
-const SERVER_ADDR = "localhost:9080";
-const SERVER_CREDENTIALS = grpc.credentials.createInsecure();
-
-// Create instances of DgraphClientStub.
-const stub1 = new dgraph.DgraphClientStub(SERVER_ADDR, SERVER_CREDENTIALS);
-const stub2 = new dgraph.DgraphClientStub(SERVER_ADDR, SERVER_CREDENTIALS);
-
-// Create an instance of DgraphClient.
-const dgraphClient = new dgraph.DgraphClient(stub1, stub2);
-
-// ...
-// Use dgraphClient
-// ...
-
-// Cleanup resources by closing all client stubs.
-stub1.close();
-stub2.close();
-```
-
-### Debug mode
-
-Debug mode can be used to print helpful debug messages while performing alters,
-queries and mutations. It can be set using the`DgraphClient#setDebugMode(boolean?)`
-method.
-
-```js
-// Create a client.
-const dgraphClient = new dgraph.DgraphClient(...);
-
-// Enable debug mode.
-dgraphClient.setDebugMode(true);
-// OR simply dgraphClient.setDebugMode();
-
-// Disable debug mode.
-dgraphClient.setDebugMode(false);
-```
-
 
 ## Examples
 
@@ -377,27 +275,8 @@ dgraphClient.setDebugMode(false);
 
 ## Development
 
-### Building the source
-
-```sh
-npm run build
-```
-
-If you have made changes to the `proto/api.proto` file, you need need to
-regenerate the source files generated by Protocol Buffer tools. To do that,
-install the [Protocol Buffer Compiler][protoc] and then run the following
-command:
-
-[protoc]: https://github.com/google/protobuf#readme
-
-```sh
-npm run build:protos
-```
-
 ### Running tests
 
-Make sure you have a Dgraph server running on localhost before you run this task.
-
 ```sh
-npm test
+dotnet test
 ```
