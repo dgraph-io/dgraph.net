@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using DgraphDotNet.Graph;
 using DgraphDotNet.Transactions;
 using Grpc.Core;
 
@@ -43,8 +42,6 @@ namespace DgraphDotNet {
         /// connections is used.
         /// </remarks>
         void Connect(string address, ChannelCredentials credentials = null, IEnumerable<ChannelOption> options = null);
-
-        IEnumerable<string> AllConnections();
 
         /// <summary>
         /// Alter the schema see: https://docs.dgraph.io/query-language/#schema

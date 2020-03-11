@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -52,16 +51,6 @@ namespace DgraphDotNet {
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// All connections (OK or failed) that have been submitted to the 
-        /// client and not disconnected.
-        /// </summary>
-        public IEnumerable<string> AllConnections() {
-            AssertNotDisposed();
-
-            return connections.Select(c => c.Target);
         }
 
         #endregion
@@ -121,13 +110,13 @@ namespace DgraphDotNet {
             }
         }
 
-        public async Task<FluentResults.Result<DgraphSchema>> SchemaQuery() {
-            return await SchemaQuery("schema { }");
-        }
-
         public async Task<FluentResults.Result<DgraphSchema>> SchemaQuery(string schemaQuery) {
             AssertNotDisposed();
             
+            if(schemaQuery == null) {
+                schemaQuery = "schema { }";
+            }
+
             using(var transaction = NewTransaction()) {
                 return await transaction.SchemaQuery(schemaQuery);
             }
@@ -140,6 +129,8 @@ namespace DgraphDotNet {
         }
 
         public async Task<FluentResults.Result<string>> QueryWithVars(string queryString, Dictionary<string, string> varMap) {
+            AssertNotDisposed();
+
             using(var transaction = NewTransaction()) {
                 return await transaction.QueryWithVars(queryString, varMap);
             }
