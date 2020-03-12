@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -52,16 +51,6 @@ namespace DgraphDotNet {
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// All connections (OK or failed) that have been submitted to the 
-        /// client and not disconnected.
-        /// </summary>
-        public IEnumerable<string> AllConnections() {
-            AssertNotDisposed();
-
-            return connections.Select(c => c.Target);
         }
 
         #endregion
@@ -121,13 +110,13 @@ namespace DgraphDotNet {
             }
         }
 
-        public async Task<FluentResults.Result<DgraphSchema>> SchemaQuery() {
-            return await SchemaQuery("schema { }");
-        }
-
         public async Task<FluentResults.Result<DgraphSchema>> SchemaQuery(string schemaQuery) {
             AssertNotDisposed();
             
+            if(schemaQuery == null) {
+                schemaQuery = "schema { }";
+            }
+
             using(var transaction = NewTransaction()) {
                 return await transaction.SchemaQuery(schemaQuery);
             }
@@ -140,6 +129,8 @@ namespace DgraphDotNet {
         }
 
         public async Task<FluentResults.Result<string>> QueryWithVars(string queryString, Dictionary<string, string> varMap) {
+            AssertNotDisposed();
+
             using(var transaction = NewTransaction()) {
                 return await transaction.QueryWithVars(queryString, varMap);
             }
@@ -149,71 +140,6 @@ namespace DgraphDotNet {
             AssertNotDisposed();
 
             return transactionFactory.NewTransaction(this);
-        }
-
-        public async Task<FluentResults.Result<(IUIDNode, bool)>> Upsert(
-            string predicate, 
-            GraphValue value, 
-            string mutation,
-            string blankName,
-            int maxRetrys = 1
-        ) {
-            AssertNotDisposed();
-
-            var query = $"{{ q(func: eq({predicate}, \"{value.ToString()}\")) {{ uid }} }}";
-
-            var retryRemaining = (maxRetrys < 1) ? 1 : maxRetrys;
-            FluentResults.Result<(IUIDNode, bool)> result = null;
-
-            Func<FluentResults.Result<(IUIDNode, bool)>, FluentResults.Result<(IUIDNode, bool)>, FluentResults.Result<(IUIDNode, bool)>> addErr =
-                (FluentResults.Result<(IUIDNode, bool)> curError, FluentResults.Result<(IUIDNode, bool)> newError) => {
-                    return curError == null || !curError.IsFailed
-                        ? newError
-                        : Results.Merge<(IUIDNode, bool)>(curError, newError);
-                };
-
-            while (retryRemaining >= 0) {
-                retryRemaining--;
-
-                using(var txn = NewTransaction()) {
-                    var queryResult = await txn.Query(query);
-
-                    if (queryResult.IsFailed) {
-                        result = addErr(result, queryResult.ToResult<(IUIDNode, bool)>());
-                        continue;
-                    }
-
-                    if (String.Equals(queryResult.Value, "{\"q\":[]}", StringComparison.Ordinal)) {
-                        var assigned = await txn.Mutate(mutation);
-                        if (assigned.IsFailed) {
-                            result = addErr(result, assigned.ToResult<(IUIDNode, bool)>());
-                            continue;
-                        }
-                        var err = await txn.Commit();
-                        if (err.IsSuccess) {
-                            var UIDasString = assigned.Value[blankName].Replace("0x", string.Empty); // why doesn't UInt64.TryParse() work with 0x...???
-                            if (UInt64.TryParse(UIDasString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var UID)) {
-                                return Results.Ok<(IUIDNode, bool)>((new UIDNode(UID),false));
-                            }
-                            result = addErr(result, Results.Fail<(IUIDNode, bool)>("Failed to parse UID : " + UIDasString));
-                            continue;
-                        }
-                        result = addErr(result, err.ToResult<(IUIDNode, bool)>());
-                        continue;
-                    } else {
-                        var UIDasString = queryResult.Value
-                            .Replace("{\"q\":[{\"uid\":\"0x", string.Empty)
-                            .Replace("\"}]}", string.Empty);
-
-                        if (UInt64.TryParse(UIDasString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var UID)) {
-                            return Results.Ok<(IUIDNode, bool)>((new UIDNode(UID),true));
-                        }
-                        result = addErr(result, Results.Fail<(IUIDNode, bool)>("Failed to parse UID : " + UIDasString));
-                        continue;
-                    }
-                }
-            }
-            return result;
         }
 
         public async Task<Response> Query(Api.Request req) {

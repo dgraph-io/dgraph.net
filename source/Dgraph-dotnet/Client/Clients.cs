@@ -22,37 +22,6 @@ namespace DgraphDotNet {
         public static IDgraphClient NewDgraphClient() {
             return new DgraphClient(new GRPCConnectionFactory(), new TransactionFactory());
         }
-        /*
-        /// <summary>
-        /// Create a client that can do query, JSON mutations and build individual edges into sets of
-        /// mutations that are sent to the store.
-        /// </summary>
-        /// <returns></returns>
-        public static IDgraphClient NewDgraphMutationsClient(string zeroAddress) {
-            var client = new DgraphMutationsClient(new GRPCConnectionFactory(), new TransactionFactory());
-            client.ConnectZero(zeroAddress);
-            return client;
-        }
-
-        /// <summary>
-        /// Create a client that can do query, JSON mutations, edge mutations
-        /// and use batching mode - just submit edges and the client takes care of forming 
-        /// the submitted edges into batches and submitting in transaction to the backend store.
-        /// 
-        /// By default it holds open 100 batches, places edges in batches and submits a batch when it has 100
-        /// changes (sum of additions and deletions) in it.
-        /// </summary>
-        public static IDgraphBatchingClient NewDgraphBatchingClient(string zeroAddress) {
-            var client = new DgraphBatchingClient(new GRPCConnectionFactory(), new TransactionFactory());
-            client.ConnectZero(zeroAddress);
-            return client;
-        }
-
-        public static IDgraphBatchingClient NewDgraphBatchingClient(string zeroAddress, int numBatches, int batchSize) {
-            var client = new DgraphBatchingClient(new GRPCConnectionFactory(), new TransactionFactory(), numBatches, batchSize);
-            client.ConnectZero(zeroAddress);
-            return client;
-        }*/
 
         #endregion
 
