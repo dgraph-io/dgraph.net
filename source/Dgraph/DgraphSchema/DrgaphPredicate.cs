@@ -1,35 +1,25 @@
+/*
+ * Copyright 2020 Dgraph Labs, Inc. and Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 
 namespace Dgraph.Schema
 {
 
-    /*
-    This message and the schema result payload are getting removed from Dgraph
-    (deprecated at v1.0.12), but this is a useful way to return the schema, so
-    I'll try and keep it
-
-    message SchemaNode {
-    	string predicate = 1;
-    	string type = 2;
-    	bool index = 3;
-    	repeated string tokenizer = 4;
-    	bool reverse = 5;
-    	bool count = 6;
-    	bool list = 7;
-    	bool upsert = 8;
-    	bool lang = 9;
-    }
-    */
-
-    // I don't really know I want to take a dependecy on JSON.Net in the library?
-    // For the moment it looks like the only way.  Looks like high perf 
-    // deserialisation support might be baked into net core soon though
-    // https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#fast-built-in-json-support
-    // Looks like second halfo of 2019 https://devblogs.microsoft.com/dotnet/announcing-net-core-3-preview-3/
-    // That would allow to do this quick bit of deserialization and allow clients to use
-    // whatever they want or maybe to have query<T> types supported without dependency?  Might
-    // add it soon anyway with JSON.Net.
     public class DrgaphPredicate {
         public string Predicate { get; set; }
         public string Type { get; set; }
