@@ -44,7 +44,6 @@ namespace DgraphDotNet.Schema {
         public override string ToString() {
             string indexFragment = "";
             if (Index) {
-
                 indexFragment = "@index(" + String.Join(",", Tokenizer) + ") ";
             }
             var reverseFragment = Reverse ? "@reverse " : "";

@@ -13,4 +13,4 @@ import "github.com/dgraph-io/dgo/protos/api.proto";
 import "github.com/dgraph-io/badger/pb/badger.proto";
 ```
 
-I should be able to get this right, but for the moment, this will have to do.  I'm changing from cake builds to gcp cloud build anyway, so I might be able to get something nicer with that change in a version soon.
+I should be able to get this right, but for the moment, this will have to do.  

@@ -13,24 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-using System;
-using System.Threading.Tasks;
-using Api;
-using Grpc.Core;
 
-namespace DgraphDotNet {
+using FluentResults;
 
-    /// <summary>
-    /// Internal dealings of clients with Dgraph --- Not part of the
-    /// external interface
-    /// </summary>
-    internal interface IDgraphClientInternal {
+namespace DgraphDotNet
+{
 
-        Task<T> DgraphExecute<T>(
-            Func<Dgraph.DgraphClient, Task<T>> execute, 
-            Func<RpcException, T> onFail
-        );
-        
+    public class TransactionNotOK : Error {
+        internal TransactionNotOK(string state) 
+            : base("Cannot perform action when transaction is in state " + state) { }
     }
+
+    public class StartTsMismatch : Error {
+        internal StartTsMismatch() : base("StartTs mismatch") { }
+    }
+
 }

@@ -1,16 +1,20 @@
 using System.Threading.Tasks;
 using Assent;
-using Dgraph_dotnet.tests.e2e.Errors;
-using Dgraph_dotnet.tests.e2e.Orchestration;
-using DgraphDotNet;
+using DgraphDotNet.tests.e2e.Orchestration;
 using FluentAssertions;
+using Newtonsoft.Json;
+using DgraphDotNet.Schema;
+using Api;
+using System;
+using System.Threading;
 
-namespace Dgraph_dotnet.tests.e2e.Tests {
-    public class SchemaTest : GraphSchemaE2ETest {
+namespace DgraphDotNet.tests.e2e.Tests
+{
+    public class SchemaTest : DgraphDotNetE2ETest {
         public SchemaTest(DgraphClientFactory clientFactory) : base(clientFactory) { }
 
         public async override Task Test() {
-            using(var client = ClientFactory.GetDgraphClient()) {
+            using(var client = await ClientFactory.GetDgraphClient()) {
                 await InitialSchemaIsAsExpected(client);
                 await AlterSchemAsExpected(client);
                 await AlterSchemaAgainAsExpected(client);
@@ -21,43 +25,64 @@ namespace Dgraph_dotnet.tests.e2e.Tests {
         }
 
         private async Task InitialSchemaIsAsExpected(IDgraphClient client) {
-            var schemaResult = await client.SchemaQuery();
-            AssertResultIsSuccess(schemaResult);
-            this.Assent(schemaResult.Value.ToString(), AssentConfiguration);
+            var response = await client.NewReadOnlyTransaction().Query("schema {}");
+            AssertResultIsSuccess(response);
+
+            var schema = JsonConvert.DeserializeObject<DgraphSchema>(
+                response.Value.Json.ToStringUtf8());
+            this.Assent(schema.ToString(), AssentConfiguration);
         }
 
         private async Task AlterSchemAsExpected(IDgraphClient client) {
-            var alterSchemaResult = await client.AlterSchema(ReadEmbeddedFile("test.schema"));
+            var alterSchemaResult = await client.Alter(
+                new Operation{ Schema = ReadEmbeddedFile("test.schema") });
             AssertResultIsSuccess(alterSchemaResult);
 
-            var schemaResult = await client.SchemaQuery();
-            AssertResultIsSuccess(schemaResult);
-            this.Assent(schemaResult.Value.ToString(), AssentConfiguration);
+            // After an Alter, Dgraph computes indexes in the background.
+            // So a first schema query after Alter might return a schema
+            // without indexes.  We could poll and backoff and show that
+            // ... but we aren't testing that here, just that the schema
+            // updates.
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+
+            var response = await client.NewReadOnlyTransaction().Query("schema {}");
+            AssertResultIsSuccess(response);
+
+            var schema = JsonConvert.DeserializeObject<DgraphSchema>(
+                response.Value.Json.ToStringUtf8());
+            this.Assent(schema.ToString(), AssentConfiguration);
         }
 
         private async Task AlterSchemaAgainAsExpected(IDgraphClient client) {
-            var alterSchemaResult = await client.AlterSchema(ReadEmbeddedFile("altered.schema"));
+            var alterSchemaResult = await client.Alter(
+                new Operation{ Schema = ReadEmbeddedFile("altered.schema") });
             AssertResultIsSuccess(alterSchemaResult);
 
-            var schemaResult = await client.SchemaQuery();
-            AssertResultIsSuccess(schemaResult);
-            this.Assent(schemaResult.Value.ToString(), AssentConfiguration);
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+
+            var response = await client.NewReadOnlyTransaction().Query("schema {}");
+            AssertResultIsSuccess(response);
+
+            var schema = JsonConvert.DeserializeObject<DgraphSchema>(
+                response.Value.Json.ToStringUtf8());
+            this.Assent(schema.ToString(), AssentConfiguration);
         }
 
         private async Task SchemaQueryWithRestrictions(IDgraphClient client) {
-            var schemaResult = await client.SchemaQuery("schema(pred: [name, friends, dob, scores]) { type }");
-            AssertResultIsSuccess(schemaResult);
-            this.Assent(schemaResult.Value.ToString(), AssentConfiguration);
+            var response = await client.NewReadOnlyTransaction().Query(
+                "schema(pred: [name, friends, dob, scores]) { type }");
+            AssertResultIsSuccess(response);
+
+            var schema = JsonConvert.DeserializeObject<DgraphSchema>(
+                response.Value.Json.ToStringUtf8());
+            this.Assent(schema.ToString(), AssentConfiguration);
         }
 
         private async Task ErrorsResultInFailedQuery(IDgraphClient client) {
             // maformed
-            var q1result = await client.SchemaQuery("schema(pred: [name, friends, dob, scores]) { type ");
+            var q1result = await client.NewReadOnlyTransaction().Query(
+                "schema(pred: [name, friends, dob, scores]) { type ");
             q1result.IsSuccess.Should().BeFalse();
-
-            // not a schema query
-            var q2result = await client.SchemaQuery("{ q(func: uid(0x1)) { not-schema-query } }");
-            q2result.IsSuccess.Should().BeFalse();
         }
     }
 }

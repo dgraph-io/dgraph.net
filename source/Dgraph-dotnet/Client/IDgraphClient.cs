@@ -1,63 +1,62 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using DgraphDotNet.Transactions;
-using Grpc.Core;
-
 /*
+ * Copyright 2020 Dgraph Labs, Inc. and Contributors
  *
- *  service Dgraph {
- *	  rpc Query (Request)            returns (Response) {}
- *    rpc Alter (Operation)          returns (Payload) {}
- *    rpc CommitOrAbort (TxnContext) returns (TxnContext) {}
- *    rpc CheckVersion(Check)        returns (Version) {}
- *  }
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-namespace DgraphDotNet {
+using System;
+using System.Threading.Tasks;
+using DgraphDotNet.Transactions;
+
+namespace DgraphDotNet
+{
 
     /// <summary>
-    /// A client is in charge of making connections to Dgraph backends.  Once a
-    /// connection is made, the client manages the connection (and shuts it down
-    /// on exit).
-    ///
-    /// This type of client can do transactions with query and JSON mutations.
-    /// see : https://docs.dgraph.io/mutations/#json-mutation-format
+    /// An IDgraphClient is connected to a Dgraph cluster (to one or more Alpha
+    /// nodes).  Once a client is made, the client manages the connections and 
+    // shuts all connections down on exit.
     /// </summary>
     /// <exception cref="System.ObjectDisposedException">Thrown if the client
     /// has been disposed and calls are made.</exception>
-    public interface IDgraphClient : IDisposable, IQuery {
+    public interface IDgraphClient : IDisposable {
 
         /// <summary>
-        /// Connect to a backend Dgraph instance.  Multiple connections can be
-        /// made in a single client.
+        /// Alter the Dgraph database (alter schema, drop everything, etc.).
         /// </summary>
-        /// <param name="address"> address to connect to: e.g. of the form
-        /// 127.0.0.1:9080.</param>
-        /// <remarks>All addresses added to a single client should be addresses
-        /// of servers in a single Dgraph cluster.   On running a call such as
-        /// <see cref="AlterSchema(string)"/>
-        /// or submitting an <see cref="ITransaction"/> any one of the
-        /// connections is used.
-        /// </remarks>
-        void Connect(string address, ChannelCredentials credentials = null, IEnumerable<ChannelOption> options = null);
-
-        /// <summary>
-        /// Alter the schema see: https://docs.dgraph.io/query-language/#schema
-        /// </summary>
-        Task<FluentResults.Result> AlterSchema(string newSchema);
-
-        /// <summary>
-        /// Remove everything from the database.
-        /// </summary>
-        Task<FluentResults.Result> DropAll();
+        Task<FluentResults.Result> Alter(Api.Operation op);
 
         /// <summary>
         /// Returns the Dgraph version string.
         /// </summary>
         Task<FluentResults.Result<string>> CheckVersion();
 
+        /// <summary>
+        /// Create a transaction that can only query.  
+        ///
+        /// Read-only transactions circumvent the usual consensus protocol
+        /// and so can increase read speed. 
+        ///
+        /// Best effort tells Dgraph to use transaction time stamps from
+        /// memory on best-effort basis to reduce the number of outbound 
+        /// requests to Zero. This may yield improved latencies in read-bound 
+        /// workloads where linearizable reads are not strictly needed.
+        /// </summary>
+        IQuery NewReadOnlyTransaction(Boolean bestEffort = false);
+
+        /// <summary>
+        /// Create a transaction that can run queries and mutations.
+        /// </summary>
         ITransaction NewTransaction();
+
     }
 }

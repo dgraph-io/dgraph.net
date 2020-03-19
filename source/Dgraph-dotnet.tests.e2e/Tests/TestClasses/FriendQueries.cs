@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using FluentAssertions;
 using Newtonsoft.Json.Linq;
 
-namespace Dgraph_dotnet.tests.e2e.Tests.TestClasses {
+namespace DgraphDotNet.tests.e2e.Tests.TestClasses {
 
     public class FriendQueries {
         

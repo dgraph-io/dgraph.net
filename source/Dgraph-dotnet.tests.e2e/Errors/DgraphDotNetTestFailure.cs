@@ -1,7 +1,7 @@
 using System;
 using FluentResults;
 
-namespace Dgraph_dotnet.tests.e2e.Errors
+namespace DgraphDotNet.tests.e2e.Errors
 {
     public class DgraphDotNetTestFailure : Exception
     {

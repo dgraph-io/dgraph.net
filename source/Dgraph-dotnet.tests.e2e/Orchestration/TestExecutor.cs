@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Dgraph_dotnet.tests.e2e.Errors;
-using Dgraph_dotnet.tests.e2e.Tests;
+using DgraphDotNet.tests.e2e.Errors;
+using DgraphDotNet.tests.e2e.Tests;
 
-namespace Dgraph_dotnet.tests.e2e.Orchestration {
+namespace DgraphDotNet.tests.e2e.Orchestration {
     public class TestExecutor {
         public int TestsRun = 0;
         public int TestsFailed = 0;
@@ -22,29 +22,18 @@ namespace Dgraph_dotnet.tests.e2e.Orchestration {
         }
 
         public async Task ExecuteAll(IEnumerable<string> tests) {
-
-            try {
-                var result = await ClientFactory.ProvisionDgraph();
-                if (result.IsFailed) {
-                    TestsFailed = tests.Count();
-                    _Exceptions.Add(new DgraphDotNetTestFailure("Failed to provision Dgraph", result));
-                    return;
+            foreach (var test in TestFinder.FindTests(tests)) {
+                try {
+                    TestsRun++;
+                    await test.Setup();
+                    await test.Test();
+                    await test.TearDown();
+                } catch (Exception ex) {
+                    TestsFailed++;
+                    _Exceptions.Add(ex);
                 }
-
-                foreach (var test in TestFinder.FindTests(tests)) {
-                    try {
-                        TestsRun++;
-                        await test.Setup();
-                        await test.Test();
-                        await test.TearDown();
-                    } catch (Exception ex) {
-                        TestsFailed++;
-                        _Exceptions.Add(ex);
-                    }
-                }
-            } finally {
-                await ClientFactory.DestroyDgraph();
             }
-        }
+        } 
+
     }
 }

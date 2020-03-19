@@ -5,21 +5,18 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
-using Dgraph_dotnet.tests.e2e.Errors;
-using Dgraph_dotnet.tests.e2e.Orchestration;
-using Dgraph_dotnet.tests.e2e.Tests;
+using DgraphDotNet.tests.e2e.Errors;
+using DgraphDotNet.tests.e2e.Orchestration;
+using DgraphDotNet.tests.e2e.Tests;
 using DgraphDotNet;
-using GraphSchema.io.Client;
-using GraphSchema.io.Client.Models;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Net.Http.Headers;
 using Serilog;
 
-namespace Dgraph_dotnet.tests.e2e {
+namespace DgraphDotNet.tests.e2e {
 
-    [Command(Name = "Dgraph-dotnet E2E test runner")]
+    [Command(Name = "Dgraph.net E2E test runner")]
     [HelpOption("--help")]
     class Program {
 
@@ -29,16 +26,12 @@ namespace Dgraph_dotnet.tests.e2e {
         [Option(ShortName = "i", Description = "Turn on interactive mode when not running in build server.")]
         public bool Interactive { get; }
 
-        [Option(ShortName = "p", Description = "Run parallel test executions.")]
-        public int Parallel { get; } = 1;
-
         public static int Main(string[] args) {
             try {
                 var config = new ConfigurationBuilder()
                     .SetBasePath(Directory.GetCurrentDirectory())
                     .AddJsonFile("appsettings.json", optional : false, reloadOnChange : false)
-                    .AddUserSecrets<Program>()
-                    .AddEnvironmentVariables("DGDNE2E_")
+                    .AddEnvironmentVariables("DGNETE2E_")
                     .Build();
 
                 Log.Logger = new LoggerConfiguration()
@@ -47,26 +40,11 @@ namespace Dgraph_dotnet.tests.e2e {
 
                 var services = new ServiceCollection();
 
-                var graphschemaIOconnection = new GraphSchemaIOConnection();
-                config.Bind(nameof(GraphSchemaIOConnection), graphschemaIOconnection);
-                services.AddSingleton<GraphSchemaIOConnection>(graphschemaIOconnection);
-
-                if (!graphschemaIOconnection.Endpoint.Equals("localhost")) {
-                    services.AddGraphSchemaIOLClient(httpClient => {
-                        httpClient.BaseAddress = new Uri(graphschemaIOconnection.Endpoint);
-
-                        httpClient.DefaultRequestHeaders.Add(HeaderNames.Authorization,
-                            $"X-GraphSchemaIO-ApiKey {graphschemaIOconnection.ApiKeyId}:{graphschemaIOconnection.ApiKeySecret}");
-                    });
-                } else {
-                    services.AddGraphSchemaIOLClient(httpClient => { }); // only needed to make DI happy
-                }
-
                 // Inject in every possible test type so that DI will be able to
                 // mint up these for me without me having to do anything to hydrate
                 // the objects.
-                Type baseTestType = typeof(GraphSchemaE2ETest);
-                var assembly = typeof(GraphSchemaE2ETest).Assembly;
+                Type baseTestType = typeof(DgraphDotNetE2ETest);
+                var assembly = typeof(DgraphDotNetE2ETest).Assembly;
                 IEnumerable<Type> testTypes = assembly.GetTypes().Where(t => t.IsSubclassOf(baseTestType));
                 foreach (var testType in testTypes) {
                     services.AddTransient(testType);
@@ -106,51 +84,30 @@ namespace Dgraph_dotnet.tests.e2e {
             return 1;
         }
 
-        public Program(GraphSchemaIOConnection connectionInfo, IServiceProvider serviceProvider, TestFinder testFinder, TestExecutor testExecutor) {
-            ConnectionInfo = connectionInfo;
+        public Program(IServiceProvider serviceProvider, TestFinder testFinder, TestExecutor testExecutor) {
             ServiceProvider = serviceProvider;
             TestFinder = testFinder;
             TestExecutor = testExecutor;
         }
 
-        private GraphSchemaIOConnection ConnectionInfo;
         private IServiceProvider ServiceProvider;
         private TestFinder TestFinder;
         private TestExecutor TestExecutor;
 
         private async Task OnExecuteAsync(CommandLineApplication app) {
 
-            if (ConnectionInfo.Endpoint.Equals("localhost") && Parallel > 1) {
-                throw new ArgumentException("Local and Parallel execution are incompatible");
-            }
-
-            if (Interactive && Parallel > 1) {
-                throw new ArgumentException("Interactive mode and Parallel execution are incompatible");
-            }
-
-            if (Parallel < 1) {
-                throw new ArgumentException("Parallel must be greater than 1.");
-            }
-
             EnsureAllTestsRegistered();
 
             var tests = TestFinder.FindTestNames(Test);
 
-            var batchSize = tests.Count() / Parallel;
-
-            var batches = new List<List<string>>();
-            for (var i = 0; i < Parallel; i++) {
-                batches.Add(tests.Skip(i * batchSize).Take(batchSize).ToList());
-            }
-
-            Log.Information("Begining {Parallel} parallel test runs with batches : {@Batches}", Parallel, batches);
+            Log.Information("Begining {NumTests} tests.", tests.Count);
 
             // Exceptions shouldn't escape this in normal circumstances.
-            var executors = await Task.WhenAll(batches.Select(b => Execute(b)).ToList());
-
-            var totalRan = executors.Select(ex => ex.TestsRun).Sum();
-            var totalFailed = executors.Select(ex => ex.TestsFailed).Sum();
-            var exceptionList = executors.SelectMany(ex => ex.Exceptions);
+            var executor = await Execute(tests);
+            
+            var totalRan = executor.TestsRun;
+            var totalFailed = executor.TestsFailed;
+            var exceptionList = executor.Exceptions;
 
             Log.Information("-----------------------------------------");
             Log.Information("Test Results:");

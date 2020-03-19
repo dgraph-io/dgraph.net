@@ -3,16 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
 
-    <PackageId>Dgraph-dotnet</PackageId>
+    <PackageId>Dgraph</PackageId>
     
     <Title>.Net Dgraph Client</Title>
     <Authors>Michael Compton</Authors>
-    <Company>Michael Compton Pty Ltd</Company>
+    <Company>Dgraph Labs Inc</Company>
     <Product>.Net Dgraph Client</Product>
     <Description>.Net client library for Dgraph</Description>
-    <Copyright>Michael Compton</Copyright>
-    <PackageProjectUrl>https://github.com/MichaelJCompton/Dgraph-dotnet</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/MichaelJCompton/Dgraph-dotnet</RepositoryUrl>
+    <Copyright>Dgraph Labs Inc</Copyright>
+    <PackageProjectUrl>https://github.com/dgraph-io/dgraph.net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dgraph-io/dgraph.net</RepositoryUrl>
     <IncludeSymbols>True</IncludeSymbols>
   </PropertyGroup>
 
@@ -21,8 +21,7 @@
     <PackageReference Include="Grpc" Version="1.19.0" />
     <PackageReference Include="Grpc.Tools" Version="1.19.0" PrivateAssets="All" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0"/>
-    <PackageReference Include="FluentResults" Version="1.2.0"/>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+    <PackageReference Include="FluentResults" Version="1.4.0"/>
   </ItemGroup>
 
   <ItemGroup>

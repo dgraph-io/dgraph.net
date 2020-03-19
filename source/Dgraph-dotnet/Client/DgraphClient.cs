@@ -1,176 +1,125 @@
+/*
+ * Copyright 2020 Dgraph Labs, Inc. and Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using Api;
-using DgraphDotNet.Schema;
-using DgraphDotNet.Graph;
 using DgraphDotNet.Transactions;
 using FluentResults;
 using Grpc.Core;
 using System.Threading.Tasks;
 
-namespace DgraphDotNet {
+// FIXME: do we need this??  only if we want to moc DgraphExecute
+//
+// For unit testing.  Allows to make mocks of the internal interfaces and factories
+// so can test in isolation from a Dgraph instance.
+//
+// When I put this in an AssemblyInfo.cs it wouldn't compile any more.
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Dgraph-dotnet.tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicProxyGenAssembly2")] // for NSubstitute
 
-    internal class DgraphClient : IDgraphClient, IDgraphClientInternal {
+namespace DgraphDotNet
+{
 
-        protected readonly IGRPCConnectionFactory connectionFactory;
-        protected readonly ITransactionFactory transactionFactory;
+    public class DgraphClient : IDgraphClient, IDgraphClientInternal {
 
-        internal DgraphClient(IGRPCConnectionFactory connectionFactory, ITransactionFactory transactionFactory) {
-            this.connectionFactory = connectionFactory;
-            this.transactionFactory = transactionFactory;
-        }
+        private readonly List<Api.Dgraph.DgraphClient> dgraphs = 
+            new List<Api.Dgraph.DgraphClient>();
 
-		protected readonly System.Object ClientMutex = new System.Object();
-
-        // 
-        // ------------------------------------------------------
-        //                   Connections
-        // ------------------------------------------------------
-        //
-
-        #region Connections
-
-        private readonly List<IGRPCConnection> connections = new List<IGRPCConnection>();
-
-        public void Connect(
-            string address, 
-            ChannelCredentials credentials = null, 
-            IEnumerable<ChannelOption> options = null
-        ) {
-            AssertNotDisposed();
-
-            if (!string.IsNullOrEmpty(address)) {
-                lock(ClientMutex) {
-                    var existing = connections.FirstOrDefault(c => c.Target.Equals(address));
-                    if(existing == null) {
-                        if (connectionFactory.TryConnect(address, out var connection, credentials, options)) {
-                            connections.Add(connection);
-                        }
-                    }
-                }
+        public DgraphClient(params Channel[] channels) {
+            foreach (var chan in channels) {
+                Api.Dgraph.DgraphClient client = new Api.Dgraph.DgraphClient(chan);
+                dgraphs.Add(client);
             }
         }
 
-        #endregion
-
         // 
         // ------------------------------------------------------
-        //                   Transactions
+        //              Transactions
         // ------------------------------------------------------
         //
-
         #region transactions
-
-        private int NextConnection = 0;
-        private int GetNextConnection() {
-			var next = NextConnection;
-			NextConnection = (next  + 1) % connections.Count;
-            return next;
-        }			
-
-        public async Task<FluentResults.Result> AlterSchema(string newSchema) {
-            AssertNotDisposed();
-
-            var op = new Api.Operation();
-            op.Schema = newSchema;
-
-            try {
-                await connections[GetNextConnection()].Alter(op);
-                return Results.Ok();
-            } catch (RpcException rpcEx) {
-                return Results.Fail(new FluentResults.ExceptionalError(rpcEx));
-            }
-        }
-
-        public async Task<FluentResults.Result> DropAll() {
-            AssertNotDisposed();
-
-            var op = new Api.Operation() {
-                DropAll = true
-            };
-
-            try {
-                await connections[GetNextConnection()].Alter(op);
-                return Results.Ok();
-            } catch (RpcException rpcEx) {
-                return Results.Fail(new FluentResults.ExceptionalError(rpcEx));
-            }
-        }
-
-        public async Task<FluentResults.Result<string>> CheckVersion() {
-            AssertNotDisposed();
-
-            try {
-                var versionResult = await connections[GetNextConnection()].CheckVersion();
-                return Results.Ok<string>(versionResult.Tag);
-            } catch (RpcException rpcEx) {
-                return Results.Fail<string>(new FluentResults.ExceptionalError(rpcEx));
-            }
-        }
-
-        public async Task<FluentResults.Result<DgraphSchema>> SchemaQuery(string schemaQuery) {
-            AssertNotDisposed();
-            
-            if(schemaQuery == null) {
-                schemaQuery = "schema { }";
-            }
-
-            using(var transaction = NewTransaction()) {
-                return await transaction.SchemaQuery(schemaQuery);
-            }
-        }
-
-        public async Task<FluentResults.Result<string>> Query(string queryString) {
-            AssertNotDisposed();
-
-            return await QueryWithVars(queryString, new Dictionary<string, string>());
-        }
-
-        public async Task<FluentResults.Result<string>> QueryWithVars(string queryString, Dictionary<string, string> varMap) {
-            AssertNotDisposed();
-
-            using(var transaction = NewTransaction()) {
-                return await transaction.QueryWithVars(queryString, varMap);
-            }
-        }
 
         public ITransaction NewTransaction() {
             AssertNotDisposed();
 
-            return transactionFactory.NewTransaction(this);
+            return new Transaction(this);
         }
 
-        public async Task<Response> Query(Api.Request req) {
+        public IQuery NewReadOnlyTransaction(Boolean bestEffort = false) {
             AssertNotDisposed();
 
-            return await connections[GetNextConnection()].Query(req);
-        }
-
-        public async Task<Response> Mutate(Api.Request mut) {
-            AssertNotDisposed();
-
-            return await connections[GetNextConnection()].Mutate(mut);
-        }
-
-        public async Task Commit(TxnContext context) {
-            AssertNotDisposed();
-
-            await connections[GetNextConnection()].Commit(context);
-        }
-
-        public async Task Discard(TxnContext context) {
-            AssertNotDisposed();
-
-            await connections[GetNextConnection()].Discard(context);
+            return new ReadOnlyTransaction(this, bestEffort);
         }
 
         #endregion
 
         // 
         // ------------------------------------------------------
-        //              disposable pattern.
+        //              Execution
+        // ------------------------------------------------------
+        //
+        #region execution
+
+        private int NextConnection = 0;
+        private int GetNextConnection() {
+			var next = NextConnection;
+			NextConnection = (next  + 1) % dgraphs.Count;
+            return next;
+        }			
+
+        public async Task<FluentResults.Result> Alter(Api.Operation op) {
+            return await DgraphExecute(
+                async (dg) => {
+                    await dg.AlterAsync(op);
+                    return Results.Ok();
+                },
+                (rpcEx) => Results.Fail(new FluentResults.ExceptionalError(rpcEx))
+            );
+        }
+
+        public async Task<FluentResults.Result<string>> CheckVersion() {
+            return await DgraphExecute(
+                async (dg) => {
+                    var versionResult = await dg.CheckVersionAsync(new Check());
+                    return Results.Ok<string>(versionResult.Tag);;
+                },
+                (rpcEx) => Results.Fail<string>(new FluentResults.ExceptionalError(rpcEx))
+            );
+        }
+
+        public async Task<T> DgraphExecute<T>(
+            Func<Dgraph.DgraphClient, Task<T>> execute, 
+            Func<RpcException, T> onFail
+        ) {
+
+            AssertNotDisposed();
+
+            try {
+                return await execute(dgraphs[GetNextConnection()]);
+            } catch (RpcException rpcEx) {
+                return onFail(rpcEx);
+            }
+        }
+
+        #endregion
+
+        // 
+        // ------------------------------------------------------
+        //              Disposable Pattern
         // ------------------------------------------------------
         //
         #region disposable pattern
@@ -201,9 +150,11 @@ namespace DgraphDotNet {
 
         protected virtual void DisposeIDisposables() {
             if (!Disposed) {
-                this.disposed = true; // throw ObjectDisposedException on calls to client if it has been disposed. 
-                foreach (var con in connections) {
-                    con.Dispose();
+                this.disposed = true;  
+                foreach (var dgraph in dgraphs) {
+                    // FIXME:
+                    // can't get to the chans??
+                    // dgraph. Dispose();
                 }
             }
         }

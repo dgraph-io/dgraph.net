@@ -3,20 +3,20 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Assent.Namers;
-using Dgraph_dotnet.tests.e2e.Errors;
-using Dgraph_dotnet.tests.e2e.Orchestration;
+using DgraphDotNet.tests.e2e.Errors;
+using DgraphDotNet.tests.e2e.Orchestration;
 using FluentResults;
 using Microsoft.Extensions.FileProviders;
 
-namespace Dgraph_dotnet.tests.e2e.Tests {
-    public abstract class GraphSchemaE2ETest {
+namespace DgraphDotNet.tests.e2e.Tests {
+    public abstract class DgraphDotNetE2ETest {
         protected readonly DgraphClientFactory ClientFactory;
 
         protected readonly Assent.Configuration AssentConfiguration;
 
         private readonly IFileProvider EmbeddedProvider;
 
-        public GraphSchemaE2ETest(DgraphClientFactory clientFactory) {
+        public DgraphDotNetE2ETest(DgraphClientFactory clientFactory) {
             ClientFactory = clientFactory;
 
             AssentConfiguration = new Assent.Configuration()
@@ -25,12 +25,13 @@ namespace Dgraph_dotnet.tests.e2e.Tests {
             // FIXME: when I add this to a build pipeline it needs this turned off when running on the build server
             // .SetInteractive(...);
 
-            EmbeddedProvider = new EmbeddedFileProvider(Assembly.GetAssembly(typeof(GraphSchemaE2ETest)), "Dgraph_dotnet.tests.e2e.Tests.Data");
+            EmbeddedProvider = new EmbeddedFileProvider(Assembly.GetAssembly(typeof(DgraphDotNetE2ETest)), "Dgraph_dotnet.tests.e2e.Tests.Data");
         }
 
         public async virtual Task Setup() {
-            using(var client = ClientFactory.GetDgraphClient()) {
-                var result = await client.DropAll();
+            using(var client = await ClientFactory.GetDgraphClient()) {
+                var result = await client.Alter(
+                    new Api.Operation { DropAll = true }); 
                 if (result.IsFailed) {
                     throw new DgraphDotNetTestFailure("Failed to clean database in test setup", result);
                 }
@@ -40,8 +41,9 @@ namespace Dgraph_dotnet.tests.e2e.Tests {
         public abstract Task Test();
 
         public async virtual Task TearDown() {
-            using(var client = ClientFactory.GetDgraphClient()) {
-                var result = await client.DropAll();
+            using(var client = await ClientFactory.GetDgraphClient()) {
+                var result = await client.Alter(
+                    new Api.Operation { DropAll = true }); 
                 if (result.IsFailed) {
                     throw new DgraphDotNetTestFailure("Failed to clean database in test setup", result);
                 }

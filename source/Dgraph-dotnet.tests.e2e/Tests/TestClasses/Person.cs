@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Dgraph_dotnet.tests.e2e.Tests.TestClasses
+namespace DgraphDotNet.tests.e2e.Tests.TestClasses
 {
 
     [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
