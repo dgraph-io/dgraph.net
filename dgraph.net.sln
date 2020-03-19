@@ -5,9 +5,9 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "source", "source", "{44DC554A-DBFC-4652-9EA2-D6A3B78FDE53}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dgraph-dotnet", "source\Dgraph-dotnet\Dgraph-dotnet.csproj", "{EF307048-312B-4A59-AA95-1E02E6BF5585}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dgraph", "source\Dgraph\Dgraph.csproj", "{EF307048-312B-4A59-AA95-1E02E6BF5585}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dgraph-dotnet.tests.e2e", "source\Dgraph-dotnet.tests.e2e\Dgraph-dotnet.tests.e2e.csproj", "{777361EE-C9A5-428F-AC7F-4ECF981C7BD8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dgraph.tests.e2e", "source\Dgraph.tests.e2e\Dgraph.tests.e2e.csproj", "{777361EE-C9A5-428F-AC7F-4ECF981C7BD8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
