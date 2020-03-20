@@ -22,13 +22,9 @@ using FluentResults;
 using Grpc.Core;
 using System.Threading.Tasks;
 
-// FIXME: do we need this??  only if we want to moc DgraphExecute - or to check that the built
-// requests etc are right?
-//
 // For unit testing.  Allows to make mocks of the internal interfaces and factories
 // so can test in isolation from a Dgraph instance.
 //
-// When I put this in an AssemblyInfo.cs it wouldn't compile any more.
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Dgraph.tests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicProxyGenAssembly2")] // for NSubstitute
 
