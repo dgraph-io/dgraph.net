@@ -63,15 +63,14 @@ namespace Dgraph.tests.e2e.Tests
                 FriendQueries.QueryByName,
                 new Dictionary<string, string> { { "$name", person.Name } });
             AssertResultIsSuccess(queryByName);
-            queryByName.Value.Json.ToStringUtf8().Should().Be("{\"q\":[]}");
+            queryByName.Value.Json.Should().Be("{\"q\":[]}");
 
             // Can we see it in the uid (note that uid queries always return the
             // uid ... we are interested if returns the actual person or not)
             var queryByUid = await client.NewReadOnlyTransaction().
                 Query(FriendQueries.QueryByUid(person.Uid));
             AssertResultIsSuccess(queryByUid);
-            queryByUid.Value.Json.ToStringUtf8().
-                Should().Be($"{{\"q\":[{{\"uid\":\"{person.Uid}\"}}]}}");
+            queryByUid.Value.Json.Should().Be($"{{\"q\":[{{\"uid\":\"{person.Uid}\"}}]}}");
 
             AssertResultIsSuccess(await txn1.Commit());
 
@@ -80,7 +79,7 @@ namespace Dgraph.tests.e2e.Tests
                 new Dictionary<string, string> { { "$name", person.Name } });
             AssertResultIsSuccess(queryByName);
 
-            FriendQueries.AssertStringIsPerson(queryByName.Value.Json.ToStringUtf8(), person);
+            FriendQueries.AssertStringIsPerson(queryByName.Value.Json, person);
         }
 
         private async Task TransactionsAreSerlializable(IDgraphClient client) {
@@ -102,7 +101,7 @@ namespace Dgraph.tests.e2e.Tests
                 FriendQueries.QueryByName,
                 new Dictionary<string, string> { { "$name", person.Name } });
             AssertResultIsSuccess(queryByName);
-            queryByName.Value.Json.ToStringUtf8().Should().Be("{\"q\":[]}");
+            queryByName.Value.Json.Should().Be("{\"q\":[]}");
 
             AssertResultIsSuccess(await txn1.Commit());
 
@@ -111,7 +110,7 @@ namespace Dgraph.tests.e2e.Tests
                 FriendQueries.QueryByName,
                 new Dictionary<string, string> { { "$name", person.Name } });
             AssertResultIsSuccess(queryByName);
-            queryByName.Value.Json.ToStringUtf8().Should().Be("{\"q\":[]}");
+            queryByName.Value.Json.Should().Be("{\"q\":[]}");
 
             await txn2.Discard();
         }
@@ -136,15 +135,14 @@ namespace Dgraph.tests.e2e.Tests
                 FriendQueries.QueryByName,
                 new Dictionary<string, string> { { "$name", person.Name } });
             AssertResultIsSuccess(queryByName);
-            queryByName.Value.Json.ToStringUtf8().Should().Be("{\"q\":[]}");
+            queryByName.Value.Json.Should().Be("{\"q\":[]}");
 
             // Can we see it in the uid (note that uid queries always return the
             // uid ... we are interested if returns the actual person or not)
             var queryByUid = await client.NewReadOnlyTransaction().
                 Query(FriendQueries.QueryByUid(person.Uid));
             AssertResultIsSuccess(queryByUid);
-            queryByUid.Value.Json.ToStringUtf8().
-                Should().Be($"{{\"q\":[{{\"uid\":\"{person.Uid}\"}}]}}");
+            queryByUid.Value.Json.Should().Be($"{{\"q\":[{{\"uid\":\"{person.Uid}\"}}]}}");
         }
 
         #endregion
@@ -179,7 +177,7 @@ namespace Dgraph.tests.e2e.Tests
                 FriendQueries.QueryByName,
                 new Dictionary<string, string> { { "$name", personTxn1.Name } });
             AssertResultIsSuccess(queryByName);
-            queryByName.Value.Json.ToStringUtf8().Should().Be("{\"q\":[]}");
+            queryByName.Value.Json.Should().Be("{\"q\":[]}");
 
             // Cause the mutates can't clash these should be ok
             AssertResultIsSuccess(await txn1.Commit());
@@ -190,13 +188,13 @@ namespace Dgraph.tests.e2e.Tests
                 FriendQueries.QueryByName,
                 new Dictionary<string, string> { { "$name", personTxn1.Name } });
             AssertResultIsSuccess(queryByName);
-            FriendQueries.AssertStringIsPerson(queryByName.Value.Json.ToStringUtf8(), personTxn1);
+            FriendQueries.AssertStringIsPerson(queryByName.Value.Json, personTxn1);
 
             queryByName = await client.NewReadOnlyTransaction().QueryWithVars(
                 FriendQueries.QueryByName,
                 new Dictionary<string, string> { { "$name", personTxn2.Name } });
             AssertResultIsSuccess(queryByName);
-            FriendQueries.AssertStringIsPerson(queryByName.Value.Json.ToStringUtf8(), personTxn2);
+            FriendQueries.AssertStringIsPerson(queryByName.Value.Json, personTxn2);
         }
 
         private async Task ConflictingTransactionsDontBothSucceed(IDgraphClient client) {
@@ -233,14 +231,14 @@ namespace Dgraph.tests.e2e.Tests
                 FriendQueries.QueryByName,
                 new Dictionary<string, string> { { "$name", personTxn1.Name } });
             AssertResultIsSuccess(queryByName);
-            FriendQueries.AssertStringIsPerson(queryByName.Value.Json.ToStringUtf8(), personTxn1);
+            FriendQueries.AssertStringIsPerson(queryByName.Value.Json, personTxn1);
 
             // txn2 had no effect
             queryByName = await client.NewReadOnlyTransaction().QueryWithVars(
                 FriendQueries.QueryByName,
                 new Dictionary<string, string> { { "$name", personTxn2.Name } });
             AssertResultIsSuccess(queryByName);
-            queryByName.Value.Json.ToStringUtf8().Should().Be("{\"q\":[]}");
+            queryByName.Value.Json.Should().Be("{\"q\":[]}");
         }
 
         #endregion

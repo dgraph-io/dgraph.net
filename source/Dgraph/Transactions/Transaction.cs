@@ -30,19 +30,19 @@ namespace Dgraph.Transactions
 
         internal Transaction(IDgraphClientInternal client) : base(client, false, false) { }
 
-        public async Task<FluentResults.Result<Api.Response>> Mutate(
+        public async Task<FluentResults.Result<Response>> Mutate(
             RequestBuilder request, 
             CallOptions? options = null
         ) {
             AssertNotDisposed();
 
             if (TransactionState != TransactionState.OK) {
-                return Results.Fail<Api.Response>(new TransactionNotOK(TransactionState.ToString()));
+                return Results.Fail<Response>(new TransactionNotOK(TransactionState.ToString()));
             }
 
             var req = request.Request;
             if (req.Mutations.Count == 0) {
-                return Results.Ok<Api.Response>(new Response());
+                return Results.Ok<Response>(new Response(new Api.Response()));
             }
 
             HasMutated = true;
@@ -50,8 +50,8 @@ namespace Dgraph.Transactions
             req.StartTs = Context.StartTs;
 
             var response = await Client.DgraphExecute(
-                async (dg) => Results.Ok<Api.Response>(await dg.QueryAsync(req)),
-                (rpcEx) => Results.Fail<Api.Response>(new FluentResults.ExceptionalError(rpcEx))
+                async (dg) => Results.Ok<Response>(new Response(await dg.QueryAsync(req))),
+                (rpcEx) => Results.Fail<Response>(new FluentResults.ExceptionalError(rpcEx))
             );
 
             if(response.IsFailed) {
@@ -65,7 +65,7 @@ namespace Dgraph.Transactions
                 TransactionState = TransactionState.Committed;
             }
 
-            var err = MergeContext(response.Value.Txn);
+            var err = MergeContext(response.Value.DgraphResponse.Txn);
             if (err.IsFailed) {
                 // The WithReasons() here will turn this Ok, into a Fail.  So the result 
                 // and an error are in there like the Go lib.  But this can really only
@@ -74,11 +74,19 @@ namespace Dgraph.Transactions
                 // error - just 
                 //   if (...IsFailed) { ...assume mutation failed...}
                 // is enough.
-                return Results.Ok<Api.Response>(response.Value).WithReasons(err.Reasons);
+                return Results.Ok<Response>(response.Value).WithReasons(err.Reasons);
             }
 
-            return Results.Ok<Api.Response>(response.Value);
+            return Results.Ok<Response>(response.Value);
         }
+
+        public async Task<FluentResults.Result<Response>> Mutate(
+            MutationBuilder mutation,
+            bool commitNow = false,
+            CallOptions? options = null    
+        ) => await Mutate(
+                new RequestBuilder{ CommitNow = commitNow}.WithMutations(mutation),
+                options);
 
         // Dispose method - Must be ok to call multiple times!
         public async Task<FluentResults.Result> Discard(CallOptions? options = null) {

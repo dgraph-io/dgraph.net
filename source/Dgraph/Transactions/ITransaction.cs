@@ -48,11 +48,22 @@ namespace Dgraph.Transactions
     public interface ITransaction : IQuery, IDisposable {
     
         /// <summary>
-        /// Run a mutation.  If CommitNow is set on the request, then
+        /// Run a request that may involve multiple mutations.  
+        /// If CommitNow is set on the request, then
         /// the transaction will commit and can't be used again.
         /// </summary>
-        Task<FluentResults.Result<Api.Response>> Mutate(
+        Task<FluentResults.Result<Response>> Mutate(
             RequestBuilder request,
+            CallOptions? options = null    
+        );
+
+        /// <summary>
+        /// Convenience method to run a single mutation.  If CommitNow is set,
+        /// the transaction will commit and can't be used again.
+        /// </summary>
+        Task<FluentResults.Result<Response>> Mutate(
+            MutationBuilder mutation,
+            bool commitNow = false,
             CallOptions? options = null    
         );
 

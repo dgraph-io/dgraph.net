@@ -28,8 +28,7 @@ namespace Dgraph.tests.e2e.Tests
             var response = await client.NewReadOnlyTransaction().Query("schema {}");
             AssertResultIsSuccess(response);
 
-            var schema = JsonConvert.DeserializeObject<DgraphSchema>(
-                response.Value.Json.ToStringUtf8());
+            var schema = JsonConvert.DeserializeObject<DgraphSchema>(response.Value.Json);
             this.Assent(schema.ToString(), AssentConfiguration);
         }
 
@@ -48,8 +47,7 @@ namespace Dgraph.tests.e2e.Tests
             var response = await client.NewReadOnlyTransaction().Query("schema {}");
             AssertResultIsSuccess(response);
 
-            var schema = JsonConvert.DeserializeObject<DgraphSchema>(
-                response.Value.Json.ToStringUtf8());
+            var schema = JsonConvert.DeserializeObject<DgraphSchema>(response.Value.Json);
             this.Assent(schema.ToString(), AssentConfiguration);
         }
 
@@ -63,8 +61,7 @@ namespace Dgraph.tests.e2e.Tests
             var response = await client.NewReadOnlyTransaction().Query("schema {}");
             AssertResultIsSuccess(response);
 
-            var schema = JsonConvert.DeserializeObject<DgraphSchema>(
-                response.Value.Json.ToStringUtf8());
+            var schema = JsonConvert.DeserializeObject<DgraphSchema>(response.Value.Json);
             this.Assent(schema.ToString(), AssentConfiguration);
         }
 
@@ -73,8 +70,7 @@ namespace Dgraph.tests.e2e.Tests
                 "schema(pred: [name, friends, dob, scores]) { type }");
             AssertResultIsSuccess(response);
 
-            var schema = JsonConvert.DeserializeObject<DgraphSchema>(
-                response.Value.Json.ToStringUtf8());
+            var schema = JsonConvert.DeserializeObject<DgraphSchema>(response.Value.Json);
             this.Assent(schema.ToString(), AssentConfiguration);
         }
 

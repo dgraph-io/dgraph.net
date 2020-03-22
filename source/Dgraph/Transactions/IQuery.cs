@@ -38,7 +38,7 @@ namespace Dgraph.Transactions {
         /// <summary>
         /// Run a query.
         /// </summary>
-        Task<FluentResults.Result<Api.Response>> Query(
+        Task<FluentResults.Result<Response>> Query(
             string queryString, 
             CallOptions? options = null
         );
@@ -46,7 +46,7 @@ namespace Dgraph.Transactions {
         /// <summary>
         /// Run a query with variables.
         /// </summary>
-        Task<FluentResults.Result<Api.Response>> QueryWithVars(
+        Task<FluentResults.Result<Response>> QueryWithVars(
             string queryString, 
             Dictionary<string, string> varMap,
             CallOptions? options = null
