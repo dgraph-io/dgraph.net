@@ -5,3 +5,11 @@ friends: [uid] @reverse @count .
 height: float .
 name: string @index(term,exact) @upsert .
 scores: [int] @index(int) .
+type Person {
+	name
+	friends
+	dob
+	abool
+	height
+	scores
+}
