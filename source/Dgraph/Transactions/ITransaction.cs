@@ -62,7 +62,8 @@ namespace Dgraph.Transactions
         /// the transaction will commit and can't be used again.
         /// </summary>
         Task<FluentResults.Result<Response>> Mutate(
-            MutationBuilder mutation,
+            string setJson = null,
+            string deleteJson = null,
             bool commitNow = false,
             CallOptions? options = null    
         );
