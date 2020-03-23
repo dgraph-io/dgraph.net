@@ -81,11 +81,17 @@ namespace Dgraph.Transactions
         }
 
         public async Task<FluentResults.Result<Response>> Mutate(
-            MutationBuilder mutation,
+            string setJson = null,
+            string deleteJson = null,
             bool commitNow = false,
             CallOptions? options = null    
         ) => await Mutate(
-                new RequestBuilder{ CommitNow = commitNow}.WithMutations(mutation),
+                new RequestBuilder{ CommitNow = commitNow}.WithMutations(
+                    new MutationBuilder {
+                        SetJson = setJson,
+                        DeleteJson = deleteJson
+                    }
+                ),
                 options);
 
         // Dispose method - Must be ok to call multiple times!

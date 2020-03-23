@@ -73,7 +73,7 @@ namespace Dgraph.tests.e2e.Tests
                 var json = JsonConvert.SerializeObject(personList);
 
                 // There's two mutation options.  For just one mutation, use this version
-                var result = await transaction.Mutate( new MutationBuilder { SetJson = json });
+                var result = await transaction.Mutate(setJson: json);
 
                 // For more complicated multi-mutation requests or upsert mutations
                 // see the upsert test.
@@ -129,7 +129,7 @@ namespace Dgraph.tests.e2e.Tests
                 // instead.
                 var json = JsonConvert.SerializeObject(Person3);
 
-                var result = await transaction.Mutate(new MutationBuilder { SetJson = json });
+                var result = await transaction.Mutate(setJson: json);
                 AssertResultIsSuccess(result, "Mutation failed");
 
                 // no nodes were allocated
@@ -161,7 +161,7 @@ namespace Dgraph.tests.e2e.Tests
 
                 // delete a node by passing JSON like this to delete
                 var deleteResult = await transaction.Mutate(
-                    new MutationBuilder { DeleteJson = $"{{\"uid\": \"{Person1.Uid}\"}}" });
+                    deleteJson: $"{{\"uid\": \"{Person1.Uid}\"}}");
                 AssertResultIsSuccess(deleteResult, "Delete failed");
 
                 var transactionResult = await transaction.Commit();
