@@ -68,17 +68,19 @@ namespace Dgraph.tests.e2e.Tests
                 // Serialize the objects to json in whatever way works best for you.
                 //
                 // The CamelCaseNamingStrategy attribute on the type means these
-                // get serialised with initial lowwer case.
+                // get serialised with initial lower case.
                 var personList = new List<Person> { Person1, Person2, Person3 };
                 var json = JsonConvert.SerializeObject(personList);
 
-                var result = await transaction.Mutate(new RequestBuilder().
-                    WithMutations(new MutationBuilder {
-                        SetJson = json
-                    }));
+                // There's two mutation options.  For just one mutation, use this version
+                var result = await transaction.Mutate(setJson: json);
+
+                // For more complicated multi-mutation requests or upsert mutations
+                // see the upsert test.
+
                 AssertResultIsSuccess(result, "Mutation failed");
 
-                // The payload of the result is a node->uid map of newly
+                // The payload of the result contains a node->uid map of newly
                 // allocated nodes.  If the nodes don't have uid names in the
                 // mutation, then the map is like
                 //
@@ -114,7 +116,7 @@ namespace Dgraph.tests.e2e.Tests
                 AssertResultIsSuccess(queryPerson, "Query failed");
 
                 // the query result is json like { q: [ ...Person... ] }
-                FriendQueries.AssertStringIsPerson(queryPerson.Value.Json.ToStringUtf8(), person);
+                FriendQueries.AssertStringIsPerson(queryPerson.Value.Json, person);
             }
         }
 
@@ -127,10 +129,7 @@ namespace Dgraph.tests.e2e.Tests
                 // instead.
                 var json = JsonConvert.SerializeObject(Person3);
 
-                var result = await transaction.Mutate(new RequestBuilder().
-                    WithMutations(new MutationBuilder {
-                        SetJson = json
-                    }));
+                var result = await transaction.Mutate(setJson: json);
                 AssertResultIsSuccess(result, "Mutation failed");
 
                 // no nodes were allocated
@@ -144,7 +143,7 @@ namespace Dgraph.tests.e2e.Tests
                     Query(FriendQueries.QueryByUid(Person3.Uid));
             AssertResultIsSuccess(queryPerson, "Query failed");
 
-            FriendQueries.AssertStringIsPerson(queryPerson.Value.Json.ToStringUtf8(), Person3);
+            FriendQueries.AssertStringIsPerson(queryPerson.Value.Json, Person3);
         }
 
         private async Task QueryWithVars(IDgraphClient client) {
@@ -154,17 +153,15 @@ namespace Dgraph.tests.e2e.Tests
                 new Dictionary<string, string> { { "$name", Person3.Name } });
             AssertResultIsSuccess(queryPerson, "Query failed");
 
-            FriendQueries.AssertStringIsPerson(queryPerson.Value.Json.ToStringUtf8(), Person3);
+            FriendQueries.AssertStringIsPerson(queryPerson.Value.Json, Person3);
         }
 
         private async Task DeleteAPerson(IDgraphClient client) {
             using(var transaction = client.NewTransaction()) {
 
                 // delete a node by passing JSON like this to delete
-                var deleteResult = await transaction.Mutate(new RequestBuilder().
-                    WithMutations(new MutationBuilder {
-                        DeleteJson = $"{{\"uid\": \"{Person1.Uid}\"}}"
-                    }));
+                var deleteResult = await transaction.Mutate(
+                    deleteJson: $"{{\"uid\": \"{Person1.Uid}\"}}");
                 AssertResultIsSuccess(deleteResult, "Delete failed");
 
                 var transactionResult = await transaction.Commit();
@@ -185,17 +182,15 @@ namespace Dgraph.tests.e2e.Tests
             // so the only way to test that the node is deleted, 
             // is to test that we got only that back
 
-            queryPerson1.Value.Json.ToStringUtf8().
-                Should().Be($"{{\"q\":[{{\"uid\":\"{Person1.Uid}\"}}]}}");
+            queryPerson1.Value.Json.Should().Be($"{{\"q\":[{{\"uid\":\"{Person1.Uid}\"}}]}}");
 
-            // -----------------------------------------------------------
-            // ... but watch out, Dgraph can leave dangling references :-(
-            // -----------------------------------------------------------
+            // ... but watch out, Dgraph can leave dangling references 
+            // e.g. there are some edges in our graph that still point to
+            // Person 1 - we've just removed all it's outgoing edges.
             var queryPerson3 = await client.NewReadOnlyTransaction().
                 Query(FriendQueries.QueryByUid(Person3.Uid));
             AssertResultIsSuccess(queryPerson3, "Query failed");
-            var person3 = JObject.Parse(queryPerson3.Value.Json.ToStringUtf8())["q"][0].
-                ToObject<Person>();
+            var person3 = JObject.Parse(queryPerson3.Value.Json)["q"][0].ToObject<Person>();
 
             person3.Friends.Count.Should().Be(2);
         }

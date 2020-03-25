@@ -47,14 +47,14 @@ namespace Dgraph.Transactions
             Context = new TxnContext();
         }
 
-        public async Task<FluentResults.Result<Api.Response>> Query(
+        public async Task<FluentResults.Result<Response>> Query(
             string queryString, 
             CallOptions? options = null
         ) {
             return await QueryWithVars(queryString, new Dictionary<string, string>(), options);
         }
 
-        public async Task<FluentResults.Result<Api.Response>> QueryWithVars(
+        public async Task<FluentResults.Result<Response>> QueryWithVars(
             string queryString, 
             Dictionary<string, string> varMap,
             CallOptions? options = null
@@ -63,7 +63,7 @@ namespace Dgraph.Transactions
             AssertNotDisposed();
 
             if (TransactionState != TransactionState.OK) {
-                return Results.Fail<Api.Response>(
+                return Results.Fail<Response>(
                     new TransactionNotOK(TransactionState.ToString()));
             }
 
@@ -77,29 +77,29 @@ namespace Dgraph.Transactions
 
                 var response = await Client.DgraphExecute(
                     async (dg) => 
-                        Results.Ok<Api.Response>(
-                            await dg.QueryAsync(
+                        Results.Ok<Response>(
+                            new Response(await dg.QueryAsync(
                                 request, 
-                                options ?? new CallOptions(null, null, default(CancellationToken))
+                                options ?? new CallOptions(null, null, default(CancellationToken)))
                         )),
                     (rpcEx) => 
-                        Results.Fail<Api.Response>(new FluentResults.ExceptionalError(rpcEx))
+                        Results.Fail<Response>(new FluentResults.ExceptionalError(rpcEx))
                 );
 
                 if(response.IsFailed) {
                     return response;
                 }
 
-                var err = MergeContext(response.Value.Txn);
+                var err = MergeContext(response.Value.DgraphResponse.Txn);
 
                 if (err.IsSuccess) {
                     return response;
                 } else {
-                    return err.ToResult<Api.Response>();
+                    return err.ToResult<Response>();
                 }
 
             } catch (Exception ex) {
-                return Results.Fail<Api.Response>(new FluentResults.ExceptionalError(ex));
+                return Results.Fail<Response>(new FluentResults.ExceptionalError(ex));
             }
         }
 

@@ -17,7 +17,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Api;
 using FluentResults;
 using Grpc.Core;
 
@@ -42,7 +41,7 @@ namespace Dgraph.Transactions
 
             var req = request.Request;
             if (req.Mutations.Count == 0) {
-                return Results.Ok<Response>(new Response());
+                return Results.Ok<Response>(new Response(new Api.Response()));
             }
 
             HasMutated = true;
@@ -50,7 +49,7 @@ namespace Dgraph.Transactions
             req.StartTs = Context.StartTs;
 
             var response = await Client.DgraphExecute(
-                async (dg) => Results.Ok<Response>(await dg.QueryAsync(req)),
+                async (dg) => Results.Ok<Response>(new Response(await dg.QueryAsync(req))),
                 (rpcEx) => Results.Fail<Response>(new ExceptionalError(rpcEx))
             );
 
@@ -65,7 +64,7 @@ namespace Dgraph.Transactions
                 TransactionState = TransactionState.Committed;
             }
 
-            var err = MergeContext(response.Value.Txn);
+            var err = MergeContext(response.Value.DgraphResponse.Txn);
             if (err.IsFailed) {
                 // The WithReasons() here will turn this Ok, into a Fail.  So the result 
                 // and an error are in there like the Go lib.  But this can really only
@@ -79,6 +78,20 @@ namespace Dgraph.Transactions
 
             return Results.Ok<Response>(response.Value);
         }
+
+        public async Task<FluentResults.Result<Response>> Mutate(
+            string setJson = null,
+            string deleteJson = null,
+            bool commitNow = false,
+            CallOptions? options = null    
+        ) => await Mutate(
+                new RequestBuilder{ CommitNow = commitNow}.WithMutations(
+                    new MutationBuilder {
+                        SetJson = setJson,
+                        DeleteJson = deleteJson
+                    }
+                ),
+                options);
 
         // Dispose method - Must be ok to call multiple times!
         public async Task<Result> Discard(CallOptions? options = null) {
