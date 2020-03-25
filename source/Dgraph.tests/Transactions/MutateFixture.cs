@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Api;
 using Dgraph.Transactions;
 using FluentAssertions;
 using FluentResults;
@@ -75,13 +74,13 @@ namespace Dgraph.tests.Transactions {
             (var client, var assigned) = MinimalClient();
             var txn = new Transaction(client);
 
-            var response = new Response() { Json = ByteString.CopyFromUtf8("json") };
+            var response = new Api.Response() { Json = ByteString.CopyFromUtf8("json") };
             response.Uids.Add(new Dictionary<string, string> { { "node1", "0x1" } });
 
             client.DgraphExecute(
                 Arg.Any<Func<Api.Dgraph.DgraphClient, Task<Result<Response>>>>(),
                 Arg.Any<Func<RpcException, Result<Response>>>()).Returns(
-                    Results.Ok(response));
+                    Results.Ok(new Response(response)));
 
             var req = new RequestBuilder().
                 WithMutations(new MutationBuilder{ SetJson = "json" });
@@ -89,7 +88,7 @@ namespace Dgraph.tests.Transactions {
             var result = await txn.Mutate(req);
             
             result.IsSuccess.Should().BeTrue();
-            result.Value.Should().BeEquivalentTo(response);
+            result.Value.DgraphResponse.Should().BeEquivalentTo(response);
         }
 
     }

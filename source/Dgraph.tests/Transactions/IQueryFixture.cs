@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Api;
 using Dgraph.Transactions;
 using FluentAssertions;
 using FluentResults;
@@ -30,7 +29,7 @@ namespace Dgraph.tests.Transactions
             (var client, var response) = MinimalClient();
             var txn = new Transaction(client);
 
-            response.Json = ByteString.CopyFromUtf8("json"); 
+            response.DgraphResponse.Json = ByteString.CopyFromUtf8("json"); 
             // ??ByteString.CopyFrom(Encoding.UTF8.GetBytes(json));
 
             client.DgraphExecute(

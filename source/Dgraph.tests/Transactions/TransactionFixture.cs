@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Api;
 using Dgraph.Transactions;
 using FluentAssertions;
 using FluentResults;

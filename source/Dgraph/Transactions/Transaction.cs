@@ -17,7 +17,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Api;
 using FluentResults;
 using Grpc.Core;
 

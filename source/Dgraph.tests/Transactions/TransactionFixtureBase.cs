@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Api;
 using Dgraph.Transactions;
 using FluentResults;
 using Grpc.Core;
@@ -14,8 +13,9 @@ namespace Dgraph.tests.Transactions
         internal (IDgraphClientInternal, Response) MinimalClient() {
             var client = Substitute.For<IDgraphClientInternal>();
 
-            var response = new Response();
-            response.Txn = new TxnContext();
+            var dgResp = new Api.Response();
+            dgResp.Txn = new Api.TxnContext();
+            var response = new Response(dgResp);
             client.DgraphExecute(
                 Arg.Any<Func<Api.Dgraph.DgraphClient, Task<Result<Response>>>>(),
                 Arg.Any<Func<RpcException, Result<Response>>>()).Returns(Results.Ok(response));
