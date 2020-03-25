@@ -30,7 +30,7 @@ namespace Dgraph.Transactions
 
         internal Transaction(IDgraphClientInternal client) : base(client, false, false) { }
 
-        public async Task<FluentResults.Result<Response>> Mutate(
+        public async Task<Result<Response>> Mutate(
             RequestBuilder request, 
             CallOptions? options = null
         ) {
@@ -51,7 +51,7 @@ namespace Dgraph.Transactions
 
             var response = await Client.DgraphExecute(
                 async (dg) => Results.Ok<Response>(new Response(await dg.QueryAsync(req))),
-                (rpcEx) => Results.Fail<Response>(new FluentResults.ExceptionalError(rpcEx))
+                (rpcEx) => Results.Fail<Response>(new ExceptionalError(rpcEx))
             );
 
             if(response.IsFailed) {
@@ -95,7 +95,7 @@ namespace Dgraph.Transactions
                 options);
 
         // Dispose method - Must be ok to call multiple times!
-        public async Task<FluentResults.Result> Discard(CallOptions? options = null) {
+        public async Task<Result> Discard(CallOptions? options = null) {
             if (TransactionState != TransactionState.OK) {
                 // TransactionState.Committed can't be discarded
                 // TransactionState.Error only entered after Discard() is already called.
@@ -118,11 +118,11 @@ namespace Dgraph.Transactions
                         options ?? new CallOptions(null, null, default(CancellationToken)));
                     return Results.Ok();
                 },
-                (rpcEx) => Results.Fail(new FluentResults.ExceptionalError(rpcEx))
+                (rpcEx) => Results.Fail(new ExceptionalError(rpcEx))
             );
         }
 
-        public async Task<FluentResults.Result> Commit(CallOptions? options = null) {
+        public async Task<Result> Commit(CallOptions? options = null) {
             AssertNotDisposed();
 
             if (TransactionState != TransactionState.OK) {
@@ -142,7 +142,7 @@ namespace Dgraph.Transactions
                         options ?? new CallOptions(null, null, default(CancellationToken)));
                     return Results.Ok();
                 },
-                (rpcEx) => Results.Fail(new FluentResults.ExceptionalError(rpcEx))
+                (rpcEx) => Results.Fail(new ExceptionalError(rpcEx))
             );
         }
 

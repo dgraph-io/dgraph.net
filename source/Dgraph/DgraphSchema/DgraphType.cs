@@ -13,25 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Dgraph.Schema {
 
-    public class DgraphSchema {
+    public class DgraphType {
 
-        public List<DrgaphPredicate> Schema { get; set; }
+        public string Name { get; set; }
 
-        public List<DgraphType> Types { get; set; }
+        public List<DgraphField> Fields { get; set; }
 
-        public override string ToString() {
-            var preds = string.Join("\n", Schema.Select(p => p.ToString()));
+        public override string ToString() => 
+            "type " + Name + " {\n" +
+            String.Join("\n", Fields.Select(f => "\t" + f.ToString())) + "\n" +
+            "}";
 
-            var types = string.Join("\n\n", 
-                Types?.Select(t => t.ToString()) ?? new List<string>());
-
-            return preds + (types.Count() > 0 ? "\n" + types + "\n" : "\n");
-        }
     }
+
 }
