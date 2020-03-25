@@ -29,7 +29,7 @@ namespace Dgraph.Transactions
                 return Mutation.SetJson.ToStringUtf8();
             }
             set {
-                Mutation.SetJson = ByteString.CopyFromUtf8(value);
+                Mutation.SetJson = ByteString.CopyFromUtf8(value ?? "");
             }
         }
         public string SetNquads {
@@ -37,7 +37,7 @@ namespace Dgraph.Transactions
                 return Mutation.SetNquads.ToStringUtf8();
             }
             set {
-                Mutation.SetNquads = ByteString.CopyFromUtf8(value);
+                Mutation.SetNquads = ByteString.CopyFromUtf8(value ?? "");
             }            
         }
         public string DeleteJson {
@@ -45,7 +45,7 @@ namespace Dgraph.Transactions
                 return Mutation.DeleteJson.ToStringUtf8();
             }
             set {
-                Mutation.DeleteJson = ByteString.CopyFromUtf8(value);
+                Mutation.DeleteJson = ByteString.CopyFromUtf8(value ?? "");
             }               
         }
 
@@ -54,7 +54,7 @@ namespace Dgraph.Transactions
                 return Mutation.DelNquads.ToStringUtf8();
             }
             set {
-                Mutation.DelNquads = ByteString.CopyFromUtf8(value);
+                Mutation.DelNquads = ByteString.CopyFromUtf8(value ?? "");
             }   
         }
 
@@ -63,7 +63,7 @@ namespace Dgraph.Transactions
                 return Mutation.Cond;
             }
             set {
-                Mutation.Cond = value;
+                Mutation.Cond = value ?? "";
             }  
         }
 

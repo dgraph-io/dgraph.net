@@ -30,19 +30,19 @@ namespace Dgraph.Transactions
 
         internal Transaction(IDgraphClientInternal client) : base(client, false, false) { }
 
-        public async Task<FluentResults.Result<Api.Response>> Mutate(
+        public async Task<Result<Response>> Mutate(
             RequestBuilder request, 
             CallOptions? options = null
         ) {
             AssertNotDisposed();
 
             if (TransactionState != TransactionState.OK) {
-                return Results.Fail<Api.Response>(new TransactionNotOK(TransactionState.ToString()));
+                return Results.Fail<Response>(new TransactionNotOK(TransactionState.ToString()));
             }
 
             var req = request.Request;
             if (req.Mutations.Count == 0) {
-                return Results.Ok<Api.Response>(new Response());
+                return Results.Ok<Response>(new Response());
             }
 
             HasMutated = true;
@@ -50,8 +50,8 @@ namespace Dgraph.Transactions
             req.StartTs = Context.StartTs;
 
             var response = await Client.DgraphExecute(
-                async (dg) => Results.Ok<Api.Response>(await dg.QueryAsync(req)),
-                (rpcEx) => Results.Fail<Api.Response>(new FluentResults.ExceptionalError(rpcEx))
+                async (dg) => Results.Ok<Response>(await dg.QueryAsync(req)),
+                (rpcEx) => Results.Fail<Response>(new ExceptionalError(rpcEx))
             );
 
             if(response.IsFailed) {
@@ -74,14 +74,14 @@ namespace Dgraph.Transactions
                 // error - just 
                 //   if (...IsFailed) { ...assume mutation failed...}
                 // is enough.
-                return Results.Ok<Api.Response>(response.Value).WithReasons(err.Reasons);
+                return Results.Ok<Response>(response.Value).WithReasons(err.Reasons);
             }
 
-            return Results.Ok<Api.Response>(response.Value);
+            return Results.Ok<Response>(response.Value);
         }
 
         // Dispose method - Must be ok to call multiple times!
-        public async Task<FluentResults.Result> Discard(CallOptions? options = null) {
+        public async Task<Result> Discard(CallOptions? options = null) {
             if (TransactionState != TransactionState.OK) {
                 // TransactionState.Committed can't be discarded
                 // TransactionState.Error only entered after Discard() is already called.
@@ -104,11 +104,11 @@ namespace Dgraph.Transactions
                         options ?? new CallOptions(null, null, default(CancellationToken)));
                     return Results.Ok();
                 },
-                (rpcEx) => Results.Fail(new FluentResults.ExceptionalError(rpcEx))
+                (rpcEx) => Results.Fail(new ExceptionalError(rpcEx))
             );
         }
 
-        public async Task<FluentResults.Result> Commit(CallOptions? options = null) {
+        public async Task<Result> Commit(CallOptions? options = null) {
             AssertNotDisposed();
 
             if (TransactionState != TransactionState.OK) {
@@ -128,7 +128,7 @@ namespace Dgraph.Transactions
                         options ?? new CallOptions(null, null, default(CancellationToken)));
                     return Results.Ok();
                 },
-                (rpcEx) => Results.Fail(new FluentResults.ExceptionalError(rpcEx))
+                (rpcEx) => Results.Fail(new ExceptionalError(rpcEx))
             );
         }
 
