@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Grpc.Net.Client" Version="2.27.0" />
     <PackageReference Include="Assent" Version="1.4.1" />
     <PackageReference Include="FluentAssertions" Version="5.10.2" />
     <PackageReference Include="FluentResults" Version="1.4.0" />
