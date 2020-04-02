@@ -1,4 +1,5 @@
 abool: bool .
+dgraph.graphql.schema: string .
 dgraph.type: [string] @index(exact) .
 dob: datetime @index(year) .
 friends: [uid] @reverse @count .
@@ -12,4 +13,8 @@ type Person {
 	abool
 	height
 	scores
+}
+
+type dgraph.graphql {
+	dgraph.graphql.schema
 }

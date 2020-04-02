@@ -1,6 +1,7 @@
 abool: bool .
 car: uid @count .
 carMake: string @index(hash) .
+dgraph.graphql.schema: string .
 dgraph.type: [string] @index(exact) .
 dob: datetime @index(day) .
 friends: [uid] @reverse @count .
@@ -14,4 +15,8 @@ type Person {
 	abool
 	height
 	scores
+}
+
+type dgraph.graphql {
+	dgraph.graphql.schema
 }
