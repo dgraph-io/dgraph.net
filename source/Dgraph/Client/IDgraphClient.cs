@@ -17,6 +17,8 @@
 using System;
 using System.Threading.Tasks;
 using Dgraph.Transactions;
+using FluentResults;
+using Grpc.Core;
 
 namespace Dgraph
 {
@@ -31,14 +33,20 @@ namespace Dgraph
     public interface IDgraphClient : IDisposable {
 
         /// <summary>
+        /// Login to Dgraph (for enterprise mode).  Subsequent calls to this client
+        /// remember the login token and refresh when necessary.
+        /// </summary>
+        Task<Result> Login(string username, string password, CallOptions? options = null);        
+
+        /// <summary>
         /// Alter the Dgraph database (alter schema, drop everything, etc.).
         /// </summary>
-        Task<FluentResults.Result> Alter(Api.Operation op);
+        Task<Result> Alter(Api.Operation operation, CallOptions? options = null);
 
         /// <summary>
         /// Returns the Dgraph version string.
         /// </summary>
-        Task<FluentResults.Result<string>> CheckVersion();
+        Task<Result<string>> CheckVersion(CallOptions? options = null);
 
         /// <summary>
         /// Create a transaction that can only query.  
