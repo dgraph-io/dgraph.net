@@ -1,6 +1,5 @@
 # Dgraph .Net C# library for Dgraph
 
-
 Official Dgraph client implementation for C#. Distributed under the Apache 2.0 license.
 
 Before using this client, we highly recommend that you go through [docs.dgraph.io],
