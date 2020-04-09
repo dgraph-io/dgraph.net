@@ -1,1 +1,5 @@
+dgraph.graphql.schema: string .
 dgraph.type: [string] @index(exact) .
+type dgraph.graphql {
+	dgraph.graphql.schema
+}
