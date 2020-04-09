@@ -20,6 +20,7 @@ using Api;
 using Dgraph.Transactions;
 using FluentResults;
 using Grpc.Core;
+using Grpc.Net.Client;
 using System.Threading.Tasks;
 
 // For unit testing.  Allows to make mocks of the internal interfaces and factories
@@ -35,7 +36,7 @@ namespace Dgraph {
         private readonly List<Api.Dgraph.DgraphClient> dgraphs = 
             new List<Api.Dgraph.DgraphClient>();
 
-        public DgraphClient(params Channel[] channels) {
+        public DgraphClient(params GrpcChannel[] channels) {
             foreach (var chan in channels) {
                 Api.Dgraph.DgraphClient client = new Api.Dgraph.DgraphClient(chan);
                 dgraphs.Add(client);
