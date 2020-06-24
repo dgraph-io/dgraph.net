@@ -43,7 +43,13 @@ Each release of this client will support the equivalent Dgraph release. For exam
 Make a new client by passing in one or more GRPC channels pointing to alphas.
 
 ```c#
-var client = new DgraphClient(new Channel("127.0.0.1:9080", ChannelCredentials.Insecure));
+var uri = new Uri("http://127.0.0.1:9080");
+var options = new GrpcChannelOptions
+{
+    Credentials = ChannelCredentials.Insecure
+};
+
+var client = new DgraphClient(GrpcChannel.ForAddress(uri, options));
 ```
 
 
