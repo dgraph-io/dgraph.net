@@ -7,6 +7,8 @@ This client follows the [Dgraph Go client][goclient] closely.
 Before using this client, we highly recommend that you go through [docs.dgraph.io],
 and understand how to run and work with Dgraph.
 
+**Use [Discuss Issues](https://discuss.dgraph.io/tags/c/issues/35/dgraphnet) for reporting issues about this repository.**
+
 [docs.dgraph.io]:https://docs.dgraph.io
 
 ## Table of contents
