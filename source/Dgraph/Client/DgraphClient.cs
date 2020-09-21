@@ -98,9 +98,15 @@ namespace Dgraph {
         private bool jwtIsExpired(ResultBase result) {
             if(result.IsSuccess) {
                 return false;
+            }   
+
+            if(result.Errors.Count > 0 && 
+                result.Errors[0] is ExceptionalError ex &&
+                ex.Exception is RpcException rpcEx &&
+                rpcEx.StatusCode == StatusCode.Unauthenticated) {
+                    return true;
             }
 
-            // FIXME:
             return false;
         }
 

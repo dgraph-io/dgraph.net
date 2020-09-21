@@ -1,0 +1,27 @@
+dgraph.acl.rule: [uid] .
+dgraph.graphql.schema: string .
+dgraph.password: password .
+dgraph.rule.permission: int .
+dgraph.rule.predicate: string @index(exact) @upsert .
+dgraph.type: [string] @index(exact) .
+dgraph.user.group: [uid] @reverse .
+dgraph.xid: string @index(exact) @upsert .
+type Group {
+	dgraph.xid
+	dgraph.acl.rule
+}
+
+type Rule {
+	dgraph.rule.predicate
+	dgraph.rule.permission
+}
+
+type User {
+	dgraph.xid
+	dgraph.password
+	dgraph.user.group
+}
+
+type dgraph.graphql {
+	dgraph.graphql.schema
+}

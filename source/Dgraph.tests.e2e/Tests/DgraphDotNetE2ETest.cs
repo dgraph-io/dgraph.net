@@ -8,40 +8,49 @@ using Dgraph.tests.e2e.Orchestration;
 using FluentResults;
 using Microsoft.Extensions.FileProviders;
 
-namespace Dgraph.tests.e2e.Tests {
+namespace Dgraph.tests.e2e.Tests
+{
     public abstract class DgraphDotNetE2ETest {
         protected readonly DgraphClientFactory ClientFactory;
+        protected readonly ACLInitializer _setup;
 
         protected readonly Assent.Configuration AssentConfiguration;
 
         private readonly IFileProvider EmbeddedProvider;
 
-        public DgraphDotNetE2ETest(DgraphClientFactory clientFactory) {
+        public DgraphDotNetE2ETest(
+            DgraphClientFactory clientFactory,
+            ACLInitializer setup) {
             ClientFactory = clientFactory;
+            _setup = setup;
 
-            AssentConfiguration = new Assent.Configuration()
+            if(_setup.ACL_Enabled()) {
+                AssentConfiguration = new Assent.Configuration()
+                    .UsingNamer(new SubdirectoryNamer("Approved/ACL"));
+            } else {
+                AssentConfiguration = new Assent.Configuration()
                 .UsingNamer(new SubdirectoryNamer("Approved"));
-            // FIXME: .UsingSanitiser(...) might want to add this to remove versions etc
-            // FIXME: when I add this to a build pipeline it needs this turned off when running on the build server
-            // .SetInteractive(...);
+            }
 
-            EmbeddedProvider = new EmbeddedFileProvider(Assembly.GetAssembly(typeof(DgraphDotNetE2ETest)), "Dgraph.tests.e2e.Tests.Data");
+            EmbeddedProvider = new EmbeddedFileProvider(
+                Assembly.GetAssembly(typeof(DgraphDotNetE2ETest)), 
+                "Dgraph.tests.e2e.Tests.Data");
         }
 
         public async virtual Task Setup() {
-            using(var client = await ClientFactory.GetDgraphClient()) {
-                var result = await client.Alter(
-                    new Api.Operation { DropAll = true }); 
+            using(var client = await ClientFactory.GetDgraphClient(groot: true)) {
+                var result = await client.Alter(new Api.Operation { DropAll = true }); 
                 if (result.IsFailed) {
                     throw new DgraphDotNetTestFailure("Failed to clean database in test setup", result);
                 }
             }
+            await _setup.DgraphSetup();
         }
 
         public abstract Task Test();
 
         public async virtual Task TearDown() {
-            using(var client = await ClientFactory.GetDgraphClient()) {
+            using(var client = await ClientFactory.GetDgraphClient(groot: true)) {
                 var result = await client.Alter(
                     new Api.Operation { DropAll = true }); 
                 if (result.IsFailed) {
