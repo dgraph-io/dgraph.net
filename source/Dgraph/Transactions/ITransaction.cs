@@ -16,6 +16,7 @@
  
 using System;
 using System.Threading.Tasks;
+using FluentResults;
 using Grpc.Core;
 
 namespace Dgraph.Transactions
@@ -52,7 +53,7 @@ namespace Dgraph.Transactions
         /// If CommitNow is set on the request, then
         /// the transaction will commit and can't be used again.
         /// </summary>
-        Task<FluentResults.Result<Response>> Mutate(
+        Task<Result<Response>> Mutate(
             RequestBuilder request,
             CallOptions? options = null    
         );
@@ -61,7 +62,7 @@ namespace Dgraph.Transactions
         /// Convenience method to run a single mutation.  If CommitNow is set,
         /// the transaction will commit and can't be used again.
         /// </summary>
-        Task<FluentResults.Result<Response>> Mutate(
+        Task<Result<Response>> Mutate(
             string setJson = null,
             string deleteJson = null,
             bool commitNow = false,
@@ -72,14 +73,14 @@ namespace Dgraph.Transactions
         /// Discard the transaction.  Any effects are discarded from Dgraph
         /// and the transaction can't be used again.
         /// </summary>
-        Task<FluentResults.Result> Discard(CallOptions? options = null);
+        Task<Result> Discard(CallOptions? options = null);
         
         /// <summary>
         /// Commit the transaction.  IF successful, any mutations in this
         /// transaction are committed in Dgraph.  The transaction can't be 
         /// used again after a call to Commit.
         /// </summary>
-        Task<FluentResults.Result> Commit(CallOptions? options = null);
+        Task<Result> Commit(CallOptions? options = null);
 
     }
 

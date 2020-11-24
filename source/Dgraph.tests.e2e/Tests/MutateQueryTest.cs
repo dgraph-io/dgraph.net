@@ -7,15 +7,16 @@ using FluentAssertions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Api;
-using Dgraph.Transactions;
 
 namespace Dgraph.tests.e2e.Tests
 {
     public class MutateQueryTest : DgraphDotNetE2ETest {
 
-        private Person Person1, Person2, Person3;
+        protected Person Person1, Person2, Person3;
 
-        public MutateQueryTest(DgraphClientFactory clientFactory) : base(clientFactory) { }
+        public MutateQueryTest(
+            DgraphClientFactory clientFactory,
+            ACLInitializer setup) : base(clientFactory, setup) { }
 
         public async override Task Setup() {
             await base.Setup();
@@ -61,7 +62,7 @@ namespace Dgraph.tests.e2e.Tests
             }
         }
 
-        private async Task AddThreePeople(IDgraphClient client) {
+        protected async Task AddThreePeople(IDgraphClient client) {
 
             using(var transaction = client.NewTransaction()) {
 
@@ -106,7 +107,7 @@ namespace Dgraph.tests.e2e.Tests
             }          
         }
 
-        private async Task QueryAllThreePeople(IDgraphClient client) {
+        protected async Task QueryAllThreePeople(IDgraphClient client) {
 
             var people = new List<Person> { Person1, Person2, Person3 };
 
@@ -120,7 +121,7 @@ namespace Dgraph.tests.e2e.Tests
             }
         }
 
-        private async Task AlterAPerson(IDgraphClient client) {
+        protected async Task AlterAPerson(IDgraphClient client) {
             using(var transaction = client.NewTransaction()) {
                 Person3.Friends.Add(Person2);
 
@@ -146,7 +147,7 @@ namespace Dgraph.tests.e2e.Tests
             FriendQueries.AssertStringIsPerson(queryPerson.Value.Json, Person3);
         }
 
-        private async Task QueryWithVars(IDgraphClient client) {
+        protected async Task QueryWithVars(IDgraphClient client) {
 
             var queryPerson = await client.NewReadOnlyTransaction().QueryWithVars(
                 FriendQueries.QueryByName,
@@ -156,7 +157,7 @@ namespace Dgraph.tests.e2e.Tests
             FriendQueries.AssertStringIsPerson(queryPerson.Value.Json, Person3);
         }
 
-        private async Task DeleteAPerson(IDgraphClient client) {
+        protected async Task DeleteAPerson(IDgraphClient client) {
             using(var transaction = client.NewTransaction()) {
 
                 // delete a node by passing JSON like this to delete

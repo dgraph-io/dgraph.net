@@ -39,8 +39,12 @@ namespace Dgraph.tests.e2e.Orchestration {
                     return ServiceProvider.GetService<MutateQueryTest>();
                 case "TransactionTest":
                     return ServiceProvider.GetService<TransactionTest>();
-                // case "UpsertTest":
-                //     return ServiceProvider.GetService<UpsertTest>();
+                case "DgraphDotNetExample":
+                    return ServiceProvider.GetService<DgraphDotNetExample>();
+                case "UpsertTest":
+                    return ServiceProvider.GetService<UpsertTest>();
+                case "JWTTest":
+                    return ServiceProvider.GetService<JWTTest>();
                 default:
                     throw new KeyNotFoundException($"Couldn't find test : {name}.  Ensure all tests are registered in {nameof(TestFinder)}");
             }

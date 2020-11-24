@@ -25,7 +25,7 @@ namespace Dgraph.Transactions
 
     internal class Transaction : ReadOnlyTransaction, ITransaction {
 
-        private bool HasMutated;
+        private bool _hasMutated;
 
         internal Transaction(IDgraphClientInternal client) : base(client, false, false) { }
 
@@ -44,14 +44,11 @@ namespace Dgraph.Transactions
                 return Results.Ok<Response>(new Response(new Api.Response()));
             }
 
-            HasMutated = true;
+            _hasMutated = true;
 
-            req.StartTs = Context.StartTs;
+            req.StartTs = _context.StartTs;
 
-            var response = await Client.DgraphExecute(
-                async (dg) => Results.Ok<Response>(new Response(await dg.QueryAsync(req))),
-                (rpcEx) => Results.Fail<Response>(new ExceptionalError(rpcEx))
-            );
+            var response = await _client.QueryAsync(req, options);
 
             if(response.IsFailed) {
                 await Discard(); // Ignore error - user should see the original error.
@@ -79,7 +76,7 @@ namespace Dgraph.Transactions
             return Results.Ok<Response>(response.Value);
         }
 
-        public async Task<FluentResults.Result<Response>> Mutate(
+        public async Task<Result<Response>> Mutate(
             string setJson = null,
             string deleteJson = null,
             bool commitNow = false,
@@ -104,21 +101,13 @@ namespace Dgraph.Transactions
 
             TransactionState = TransactionState.Aborted;
 
-            if (!HasMutated) {
+            if (!_hasMutated) {
                 return Results.Ok();
             }
 
-            Context.Aborted = true;
+            _context.Aborted = true;
 
-            return await Client.DgraphExecute(
-                async (dg) => { 
-                    await dg.CommitOrAbortAsync(
-                        Context,
-                        options ?? new CallOptions(null, null, default(CancellationToken)));
-                    return Results.Ok();
-                },
-                (rpcEx) => Results.Fail(new ExceptionalError(rpcEx))
-            );
+            return await _client.CommitOrAbortAsync(_context, options);
         }
 
         public async Task<Result> Commit(CallOptions? options = null) {
@@ -130,19 +119,11 @@ namespace Dgraph.Transactions
 
             TransactionState = TransactionState.Committed;
 
-            if (!HasMutated) {
+            if (!_hasMutated) {
                 return Results.Ok();
             }
 
-            return await Client.DgraphExecute(
-                async (dg) => { 
-                    await dg.CommitOrAbortAsync(
-                        Context,
-                        options ?? new CallOptions(null, null, default(CancellationToken)));
-                    return Results.Ok();
-                },
-                (rpcEx) => Results.Fail(new ExceptionalError(rpcEx))
-            );
+            return await _client.CommitOrAbortAsync(_context, options);
         }
 
         // 
@@ -152,18 +133,18 @@ namespace Dgraph.Transactions
         //
         #region disposable pattern
 
-        private bool Disposed;
+        private bool _disposed;
 
         protected override void AssertNotDisposed() {
-            if (Disposed) {
+            if (_disposed) {
                 throw new ObjectDisposedException(GetType().Name);
             }
         }
 
         public void Dispose() {
 
-            if (!Disposed && TransactionState == TransactionState.OK) {
-                Disposed = true;
+            if (!_disposed && TransactionState == TransactionState.OK) {
+                _disposed = true;
 
                 // This makes Discard run async (maybe another thread)  So the current thread 
                 // might exit and get back to work (we don't really care how the Discard() went).

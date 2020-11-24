@@ -16,9 +16,7 @@
  
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
-using Api;
 using FluentResults;
 using Grpc.Core;
 
@@ -29,37 +27,36 @@ namespace Dgraph.Transactions
 
         public TransactionState TransactionState { get; protected set; }
 
-        protected readonly IDgraphClientInternal Client;
+        protected readonly IDgraphClientInternal _client;
 
-        protected readonly TxnContext Context;
+        protected readonly Api.TxnContext _context;
 
-        protected readonly Boolean ReadOnly;
+        private readonly Boolean _readOnly;
 
-        protected readonly Boolean BestEffort;
+        private readonly Boolean _bestEffort;
 
         internal ReadOnlyTransaction(IDgraphClientInternal client, bool bestEffort) : this(client, true, bestEffort) { }
 
         protected ReadOnlyTransaction(IDgraphClientInternal client, Boolean readOnly, Boolean bestEffort) {
-            Client = client;
-            ReadOnly = readOnly;
-            BestEffort = bestEffort;
+            _client = client;
+            _readOnly = readOnly;
+            _bestEffort = bestEffort;
             TransactionState = TransactionState.OK;
-            Context = new TxnContext();
+            _context = new Api.TxnContext();
         }
 
-        public async Task<FluentResults.Result<Response>> Query(
+        public async Task<Result<Response>> Query(
             string queryString, 
             CallOptions? options = null
         ) {
             return await QueryWithVars(queryString, new Dictionary<string, string>(), options);
         }
 
-        public async Task<FluentResults.Result<Response>> QueryWithVars(
+        public async Task<Result<Response>> QueryWithVars(
             string queryString, 
             Dictionary<string, string> varMap,
             CallOptions? options = null
         ) {
-
             AssertNotDisposed();
 
             if (TransactionState != TransactionState.OK) {
@@ -71,20 +68,11 @@ namespace Dgraph.Transactions
                 Api.Request request = new Api.Request();
                 request.Query = queryString;
                 request.Vars.Add(varMap);
-                request.StartTs = Context.StartTs;
-                request.ReadOnly = ReadOnly;
-                request.BestEffort = BestEffort;
+                request.StartTs = _context.StartTs;
+                request.ReadOnly = _readOnly;
+                request.BestEffort = _bestEffort;
 
-                var response = await Client.DgraphExecute(
-                    async (dg) => 
-                        Results.Ok<Response>(
-                            new Response(await dg.QueryAsync(
-                                request, 
-                                options ?? new CallOptions(null, null, default(CancellationToken)))
-                        )),
-                    (rpcEx) => 
-                        Results.Fail<Response>(new FluentResults.ExceptionalError(rpcEx))
-                );
+                var response = await _client.QueryAsync(request, options);
 
                 if(response.IsFailed) {
                     return response;
@@ -99,25 +87,25 @@ namespace Dgraph.Transactions
                 }
 
             } catch (Exception ex) {
-                return Results.Fail<Response>(new FluentResults.ExceptionalError(ex));
+                return Results.Fail<Response>(new ExceptionalError(ex));
             }
         }
 
-        protected FluentResults.Result MergeContext(TxnContext srcContext) {
+        protected Result MergeContext(Api.TxnContext srcContext) {
             if (srcContext == null) {
                 return Results.Ok();
             }
 
-            if (Context.StartTs == 0) {
-                Context.StartTs = srcContext.StartTs;
+            if (_context.StartTs == 0) {
+                _context.StartTs = srcContext.StartTs;
             }
 
-            if (Context.StartTs != srcContext.StartTs) {
+            if (_context.StartTs != srcContext.StartTs) {
                 return Results.Fail(new StartTsMismatch());
             }
 
-            Context.Keys.Add(srcContext.Keys);
-            Context.Preds.Add(srcContext.Preds);
+            _context.Keys.Add(srcContext.Keys);
+            _context.Preds.Add(srcContext.Preds);
 
             return Results.Ok();
         }

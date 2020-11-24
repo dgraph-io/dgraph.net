@@ -21,6 +21,7 @@ namespace Dgraph.tests.e2e
         [Option(ShortName = "t", Description = "Set the tests to actually run.  Can be set multiple times.  Not setting == run all tests.")]
         public List<string> Test { get; } = new List<string>();
 
+        // FIXME:  what's this doing???
         [Option(ShortName = "i", Description = "Turn on interactive mode when not running in build server.")]
         public bool Interactive { get; }
 
@@ -38,6 +39,13 @@ namespace Dgraph.tests.e2e
 
                 var services = new ServiceCollection();
 
+                var settings = new DgraphTestSettings();
+                config.Bind(nameof(DgraphTestSettings), settings);
+                if(!VerifySettings(settings)) {
+                    return 1;
+                }
+                services.AddSingleton<DgraphTestSettings>(settings);
+
                 // Inject in every possible test type so that DI will be able to
                 // mint up these for me without me having to do anything to hydrate
                 // the objects.
@@ -50,7 +58,9 @@ namespace Dgraph.tests.e2e
 
                 services.AddSingleton<TestFinder>();
                 services.AddTransient<TestExecutor>();
+                services.AddTransient<ACLInitializer>();
                 services.AddScoped<DgraphClientFactory>();
+
 
                 var serviceProvider = services.BuildServiceProvider();
 
@@ -96,6 +106,8 @@ namespace Dgraph.tests.e2e
 
             EnsureAllTestsRegistered();
 
+            // FIXME: if ACL is on, we need to init the DB with user and rules here.
+
             var tests = TestFinder.FindTestNames(Test);
 
             Log.Information("Begining {NumTests} tests.", tests.Count);
@@ -129,5 +141,35 @@ namespace Dgraph.tests.e2e
 
         private void EnsureAllTestsRegistered() =>
             TestFinder.FindTests(TestFinder.FindTestNames());
+
+        private static bool VerifySettings(DgraphTestSettings settings) {
+            if(settings == null) {
+                Log.Error("No settings found.");
+                return false;
+            }
+
+            if(settings.Endpoints == null || settings.Endpoints.Count() == 0) {
+                Log.Error("Settings doesn't contain any endpoints.");
+                return false;                
+            }
+
+            if(settings.GrootPassword != null &&
+                (settings.AlphaHTTP == null || 
+                settings.TestUser == null || 
+                settings.TestUserPassword == null)
+            ) {
+                Log.Error("Settings has a groot password, but no user to test with.");
+                return false;  
+            }
+
+            if(settings.CaCert != null && 
+                (settings.ClientCert == null || settings.ClientKey == null)
+            ) {
+                Log.Error("Settings has a CaCert, but not client certs");
+                return false;    
+            }
+
+            return true;
+        }
     }
 }

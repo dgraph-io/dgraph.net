@@ -1,0 +1,44 @@
+abool: bool .
+car: uid @count .
+carMake: string @index(hash) .
+dgraph.acl.rule: [uid] .
+dgraph.graphql.schema: string .
+dgraph.password: password .
+dgraph.rule.permission: int .
+dgraph.rule.predicate: string @index(exact) @upsert .
+dgraph.type: [string] @index(exact) .
+dgraph.user.group: [uid] @reverse .
+dgraph.xid: string @index(exact) @upsert .
+dob: datetime @index(day) .
+friends: [uid] @reverse @count .
+height: float .
+name: string @index(term,exact) @upsert .
+scores: [int] @index(int) .
+type Group {
+	dgraph.xid
+	dgraph.acl.rule
+}
+
+type Person {
+	name
+	friends
+	dob
+	abool
+	height
+	scores
+}
+
+type Rule {
+	dgraph.rule.predicate
+	dgraph.rule.permission
+}
+
+type User {
+	dgraph.xid
+	dgraph.password
+	dgraph.user.group
+}
+
+type dgraph.graphql {
+	dgraph.graphql.schema
+}

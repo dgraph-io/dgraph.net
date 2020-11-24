@@ -15,14 +15,13 @@
  */
 
 using System.Linq;
-using Api;
 
 namespace Dgraph.Transactions
 {
 
     public class RequestBuilder {
 
-        internal Request Request = new Request();
+        internal Api.Request Request = new Api.Request();
 
         public string Query {
             get {
