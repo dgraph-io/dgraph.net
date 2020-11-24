@@ -1,195 +1,179 @@
-# Dgraph .Net C# library for Dgraph
+# Dgraph.net ![Nuget](https://img.shields.io/nuget/v/dgraph) [![Build Status](https://teamcity.dgraph.io/guestAuth/app/rest/builds/buildType:(id:DgraphNet_Build)/statusIcon.svg)](https://teamcity.dgraph.io/viewLog.html?buildTypeId=DgraphNet_Build&buildId=lastFinished&guest=1)
 
-Official Dgraph client implementation for C#. Distributed under the Apache 2.0 license.
+This client follows the [Dgraph Go client][goclient] closely.
+
+[goclient]: https://github.com/dgraph-io/dgo
 
 Before using this client, we highly recommend that you go through [docs.dgraph.io],
 and understand how to run and work with Dgraph.
 
+**Use [Discuss Issues](https://discuss.dgraph.io/tags/c/issues/35/dgraphnet) for reporting issues about this repository.**
+
 [docs.dgraph.io]:https://docs.dgraph.io
 
-## Table of Contents
-- [Install](#install)
-- [Supported Versions](#supported-versions) 
-- [Learning](#learning)
-- [Using](#using)
-    * [Objects and JSON](#objects-and-json)
-    * [Graph edges and mutations](#graph-edges-and-mutations)
-    * [Edges in batches](#edges-in-batches)
-- [Building](#building)
-- [Contributing](#contributing)
+## Table of contents
+
+  - [Install](#install)
+  - [Supported Versions](#supported-versions)
+  - [Using a Client](#using-a-client)
+    - [Creating a Client](#creating-a-client)
+    - [Altering the Database](#altering-the-database)
+    - [Creating a Transaction](#creating-a-transaction)
+    - [Running a Mutation](#running-a-mutation)
+    - [Running a Query](#running-a-query)
+    - [Running an Upsert: Query + Mutation](#running-an-upsert-query--mutation)
+    - [Committing a Transaction](#committing-a-transaction)
+    - [Cleanup Resources](#cleanup-resources)
 
 ## Install
 
-Grab the [Dgraph-dotnet](https://www.nuget.org/packages/Dgraph-dotnet/) NuGet package. 
+Install using nuget:
+
+```sh
+dotnet add package Dgraph
+```
 
 ## Supported Versions
 
-Versions of this library match up to Dgraph versions as follows:
+Each release of this client will support the equivalent Dgraph release. For example, 2020.03.XX will support any Dgraph instances with version 2020.03.XX. 
 
-| DgraphDotNet versions | Dgraph version |
-| -------- | ------ |
-| v0.7.0 | v1.1 |
-| v0.6.0 | v1.0.14, v1.0.13 |
-| v0.5.0 .. v0.5.3 | v1.0.13 |
-| v0.4.0 .. v0.4.2 | v1.0.9 |
-| v0.3.0 | v1.0.5 |
-| v0.2.0 | v1.0.4 |
-| v0.1.0 | v1.0.3 |
 
-Checkout the [Changelog](https://github.com/MichaelJCompton/Dgraph-dotnet/blob/master/Changelog.md) for changes between versions.
+## Using a Client
 
-## Learning
+### Creating a Client
 
-*The examples are being replaced by automated end-to-end testing that shows how to use the library and gets run on each build against compatible Dgraph versions.  The testing is being built out in source/Dgraph-dotnet.tests.e2e.  The examples projects will be removed as the functionaly they show is tested in the end-to-end tests.*
-
-Checkout the examples in `source/Dgraph-dotnet.examples`.  There's a script in `source/Dgraph-dotnet.examples/scripts` to spin up a dgraph instance to run examples with.
-
-## Using
-
-There's three client interfaces.  
-
-* `IDrgaphClient` for serialising objects to JSON and running queries 
-* `IDgraphClient` for the above plus individual edge mutations
-* `IDgraphBatchingClient` for the above plus batching updates
-
-Upserts are supported by all three.
-
-Communication with Dgraph is via grpc.  Because that's naturally asynchronous, practically everything in the library is `async`.
-
-### Objects and JSON
-
-Use your favourite JSON serialization library.
-
-Have an object model
+Make a new client by passing in one or more GRPC channels pointing to alphas.
 
 ```c#
-public class Person
-{
-    public string uid { get; set; }
-    public string name { get; set; }
-    public DateTime DOB { get; set; }
-    public List<Person> friends { get; } = new List<Person>();
+var client = new DgraphClient(new Channel("127.0.0.1:9080", ChannelCredentials.Insecure));
+```
+
+
+### Altering the Database
+
+To set the schema, pass the schema into the `DgraphClient.Alter` function, as seen below:
+
+```c#
+var schema = "`name: string @index(exact) .";
+var result = client.Alter(new Operation{ Schema = schema });
+```
+
+The returned result object is based on the FluentResults library. You can check the status using `result.isSuccess` or `result.isFailed`. More information on the result object can be found [here](https://github.com/altmann/FluentResults).
+
+
+### Creating a Transaction
+
+To create a transaction, call `DgraphClient.NewTransaction` method, which returns a
+new `Transaction` object. This operation incurs no network overhead.
+
+It is good practice to call to wrap the `Transaction` in a `using` block, so that the `Transaction.Dispose` function is called after running
+the transaction. 
+
+```c#
+using(var transaction = client.NewTransaction()) {
+    ...
 }
 ```
 
-Make a new client
+You can also create Read-Only transactions. Read-Only transactions only allow querying, and can be created using `DgraphClient.NewReadOnlyTransaction`.
+
+
+### Running a Mutation
+
+`Transaction.Mutate(RequestBuilder)` runs a mutation. It takes in a json mutation string.
+
+We define a person object to represent a person and serialize it to a json mutation string. In this example, we are using the [JSON.NET](https://www.newtonsoft.com/json) library, but you can use any JSON serialization library you prefer.
 
 ```c#
-using(var client = DgraphDotNet.Clients.NewDgraphClient()) {
-    client.Connect("127.0.0.1:9080");
-```
-
-Grab a transaction, serialize your object model to JSON, mutate the graph and commit the transaction.
-
-```c#
-    using(var transaction = client.NewTransaction()) {
-        var json = ...serialize your object model...
-        await transaction.Mutate(json);
-        await transaction.Commit();
-    }
-```
-
-Or to query the graph.
-
-```c#
-    using(var transaction = client.NewTransaction()) {
-        var res = await transaction.Query(query);
-        
-        dynamic newObjects = ...deserialize...(res.Value);
-
-        ...
-    }
-```
-
-Check out the example in `source/Dgraph-dotnet.examples/ObjectsToDgraph`.
-
-### Graph edges and mutations
-
-If you want to form mutations based on edge additions and deletions.
-
-Make a mutations client giving it the address of the zero node.
-
-```c#
-using(IDgraphClient client = DgraphDotNet.Clients.NewDgraphMutationsClient("127.0.0.1:5080")) {
-    client.Connect("127.0.0.1:9080");
-```
-
-Grab a transaction, add as many edge edges/properties to a mutation as required, submit the mutation, commit the transaction when done.
-
-```c#
-    using(var txn = client.NewTransactionWithMutations()) {
-        var mutation = txn.NewMutation();
-        var node = NewNode().Value;
-        var property = Clients.BuildProperty(node, "someProperty", GraphValue.BuildStringValue("HI"));
-        
-        mutation.AddProperty(property.Value);
-        var err = await mutation.Submit();
-        if(err.IsFailed) {
-            // ... something went wrong
-        }
-        await txn.Commit();
-    }
+using(var txn = client.NewTransaction()) {
+    var alice = new Person{ Name = "Alice" };
+    var json = JsonConvert.SerializeObject(alice);
     
+    var transactionResult = await txn.Mutate(new RequestBuilder().WithMutations(new MutationBuilder{ SetJson = json }));
+}
 ```
 
-Check out the example in `source/Dgraph-dotnet.examples/MutationExample`.
-
-
-### Edges in batches
-
-If you want to throw edges at Dgraph asynchronously, then add edges/properties to batches and the client handles the rest.
-
-Make a batching client
+You can also set mutations using RDF format, if you so prefer, as seen below:
 
 ```c#
-using(IDgraphBatchingClient client = DgraphDotNet.Clients.NewDgraphBatchingClient("127.0.0.1:5080")) {
-    client.Connect("127.0.0.1:9080");
+var mutation = "_:alice <name> \"Alice\"";
+var transactionResult = await txn.Mutate(new RequestBuilder().WithMutations(new MutationBuilder{ SetNquads = mutation }));
 ```
 
-Throw in edges
+Check out the example in `source/Dgraph.tests.e2e/TransactionTest.cs`.
+
+### Running a Query
+
+You can run a query by calling `Transaction.Query(string)`. You will need to pass in a
+GraphQL+- query string. If you want to pass an additional map of any variables that
+you might want to set in the query, call `Transaction.QueryWithVars(string, Dictionary<string,string>)` with
+the variables dictionary as the second argument.
+
+The response would contain the response string.
+
+Let’s run the following query with a variable $a:
+
+```console
+query all($a: string) {
+  all(func: eq(name, $a))
+  {
+    name
+  }
+}
+```
+
+Run the query, deserialize the result from Uint8Array (or base64) encoded JSON and
+print it out:
 
 ```c#
-    var node = client.GetOrCreateNode("some-node");
-    if (node.IsSuccess) {
-        var property = Clients.BuildProperty(node.Value, "name", GraphValue.BuildStringValue("AName));
-        if (property.IsSuccess) {
-            await client.BatchAddProperty(property.Value);
-        }
+// Run query.
+var query = @"query all($a: string) {
+  all(func: eq(name, $a))
+  {
+    name
+  }
+}";
 
-        var edge = Clients.BuildEdge(node.Value, "friend", someOtherNode);  
-        if (edge.IsSuccess) {
-            await client.BatchAddEdge(edge.Value);
-        }
+var vars = new Dictionary<string,string> { { $a: "Alice" } };
+var res = await dgraphClient.NewReadOnlyTransaction().QueryWithVars(query, vars);
 
-    }
-``` 
+// Print results.
+Console.Write(res.Value.Json);
+```
 
-No need to create or submit transactions; the client batches the edges up into transactions and submits to Dgraph asynchronously.
+### Running an Upsert: Query + Mutation
 
-When done, flush out any remaning batches
+The `Transaction.Mutate` function allows you to run upserts consisting of one query and one mutation. 
+
+To know more about upsert, we highly recommend going through the docs at https://docs.dgraph.io/mutations/#upsert-block.
 
 ```c#
-    await client.FlushBatches();
-```                                                
+var query = @"
+  query {
+    user as var(func: eq(email, \"wrong_email@dgraph.io\"))
+  }";
 
+var mutation = new MutationBuilder{ SetNquads = "`uid(user) <email> \"correct_email@dgraph.io\" ." };
 
-Check out the example in `source/Dgraph-dotnet.examples/MovieLensBatch`.
+var request = new RequestBuilder{ Query = query, CommitNow = true }.withMutation(mutation);
 
-### What client should I use?
+// Upsert: If wrong_email found, update the existing data
+// or else perform a new mutation.
+await txn.Mutate(request);
+```
 
-Mostly, creating and using a `IDgraphClient` with `DgraphDotNet.Clients.NewDgraphClient()` and serializing an object model will be the right choice.
+### Committing a Transaction
 
-Use `IDgraphClient` or `IDgraphBatchingClient` if for example you are reading data from a file into a graph and don't want to build an object model client side, or are dealing with individual edges rather then an object model.
+A transaction can be committed using the `Transaction.Commit` method. If your transaction
+consisted solely of calls to `Transaction.Query` or `Transaction.QueryWithVars`, and no calls to
+`Transaction.Mutate`, then calling `Transaction.Commit` is not necessary.
 
-If you need to create nodes with unique identifying edges, then you'll need to use `Upsert()`.
+An error will be returned if other transactions running concurrently modify the same
+data that was modified in this transaction. It is up to the user to retry
+transactions when they fail.
 
-
-## Building
-
-To use the client, just include [Dgraph-dotnet](https://www.nuget.org/packages/Dgraph-dotnet/) NuGet package in you project.
-
-To build from source, just run `dotnet build`, `dotnet test`, etc.
-
-## Contributing
-
-Happy to take issues, suggestions and PRs.
+```c#
+using(var txn = client.NewTransaction()) {
+    var result = txn.Commit();
+}
+```
