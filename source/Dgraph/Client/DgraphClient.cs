@@ -78,20 +78,20 @@ namespace Dgraph {
             return next;
         }			
 
-        public async Task<FluentResults.Result> Alter(Api.Operation op) {
+        public async Task<FluentResults.Result> Alter(Api.Operation op, CallOptions? options = null) {
             return await DgraphExecute(
                 async (dg) => {
-                    await dg.AlterAsync(op);
+                    await dg.AlterAsync(op, options ?? new CallOptions());
                     return Results.Ok();
                 },
                 (rpcEx) => Results.Fail(new FluentResults.ExceptionalError(rpcEx))
             );
         }
 
-        public async Task<FluentResults.Result<string>> CheckVersion() {
+        public async Task<FluentResults.Result<string>> CheckVersion(CallOptions? options = null) {
             return await DgraphExecute(
                 async (dg) => {
-                    var versionResult = await dg.CheckVersionAsync(new Check());
+                    var versionResult = await dg.CheckVersionAsync(new Check(), options?? new CallOptions());
                     return Results.Ok<string>(versionResult.Tag);;
                 },
                 (rpcEx) => Results.Fail<string>(new FluentResults.ExceptionalError(rpcEx))
