@@ -35,6 +35,8 @@ namespace Dgraph.Transactions
         ) {
             AssertNotDisposed();
 
+            CallOptions opts = options ?? new CallOptions();
+
             if (TransactionState != TransactionState.OK) {
                 return Results.Fail<Response>(new TransactionNotOK(TransactionState.ToString()));
             }
@@ -49,7 +51,7 @@ namespace Dgraph.Transactions
             req.StartTs = Context.StartTs;
 
             var response = await Client.DgraphExecute(
-                async (dg) => Results.Ok<Response>(new Response(await dg.QueryAsync(req))),
+                async (dg) => Results.Ok<Response>(new Response(await dg.QueryAsync(req, opts))),
                 (rpcEx) => Results.Fail<Response>(new ExceptionalError(rpcEx))
             );
 

@@ -177,3 +177,28 @@ using(var txn = client.NewTransaction()) {
     var result = txn.Commit();
 }
 ```
+
+
+### Setting Metadata Headers
+
+Metadata headers such as authentication tokens can be set through the `options` of gRPC methods. Below is an example of how to set a header named "auth-token".
+
+```c#
+var metadata = new Metadata
+{
+    { "auth-token", "the-auth-token-value" }
+};
+
+var options = new CallOptions(headers: metadata);
+
+client.Alter(op, options)
+```
+
+### Connecting To Slash Endpoint
+
+Please use the following snippet to connect to a Slash GraphQL or Slash Enterprise backend.
+
+
+```c#
+var client = new DgraphClient(SlashChannel.Create("127.0.0.1:9080", "api-key-here"));
+```
