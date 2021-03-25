@@ -17,7 +17,7 @@
 // Use protos/gen.sh to generate .pb.go files.
 syntax = "proto3";
 
-package pb;
+package badgerpb3;
 
 message KV {
   bytes key = 1;
@@ -35,6 +35,9 @@ message KV {
 
 message KVList {
   repeated KV kv = 1;
+
+  // alloc_ref used internally for memory management.
+  uint64 alloc_ref = 10;
 }
 
 message ManifestChangeSet {
@@ -59,18 +62,6 @@ message ManifestChange {
   uint32 compression = 6;   // Only used for CREATE Op.
 }
 
-message BlockOffset {
-  bytes key = 1;
-  uint32 offset = 2;
-  uint32 len = 3;
-}
-
-message TableIndex {
-  repeated BlockOffset offsets = 1;
-  bytes bloom_filter = 2;
-  uint64 estimated_size = 3;
-}
-
 message Checksum {
   enum Algorithm {
     CRC32C = 0;
@@ -85,4 +76,9 @@ message DataKey {
   bytes  data       = 2;
   bytes  iv         = 3;
   int64  created_at = 4;
+}
+
+message Match {
+    bytes prefix = 1;
+    string ignore_bytes = 2; // Comma separated with dash to represent ranges "1, 2-3, 4-7, 9"
 }

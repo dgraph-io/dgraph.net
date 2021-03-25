@@ -16,7 +16,7 @@
     <RepositoryUrl>https://github.com/dgraph-io/dgraph.net</RepositoryUrl>
     <IncludeSymbols>True</IncludeSymbols>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>20.03.00</PackageVersion>
+    <PackageVersion>20.11.02</PackageVersion>
     <PackageLicenseUrl>https://github.com/dgraph-io/dgraph.net/LICENSE.txt</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
