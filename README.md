@@ -202,3 +202,19 @@ Please use the following snippet to connect to a Slash GraphQL or Slash Enterpri
 ```c#
 var client = new DgraphClient(SlashChannel.Create("127.0.0.1:9080", "api-key-here"));
 ```
+
+
+### Login to Namespace
+
+Please use the following snippet to connect to a Slash GraphQL or Slash Enterprise backend.
+
+
+```c#
+var lr = new Api.LoginRequest() {
+  UserId = "userId",
+  Password = "password",
+  Namespace = 0
+}
+
+client.Login(lr)
+```
