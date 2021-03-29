@@ -54,7 +54,7 @@ var client = new DgraphClient(new Channel("127.0.0.1:9080", ChannelCredentials.I
 To set the schema, pass the schema into the `DgraphClient.Alter` function, as seen below:
 
 ```c#
-var schema = "`name: string @index(exact) .";
+var schema = "name: string @index(exact) .";
 var result = client.Alter(new Operation{ Schema = schema });
 ```
 
