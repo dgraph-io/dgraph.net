@@ -116,6 +116,8 @@ namespace Dgraph.Transactions
                 return Results.Fail(new StartTsMismatch());
             }
 
+            Context.Hash = srcContext.Hash;
+
             Context.Keys.Add(srcContext.Keys);
             Context.Preds.Add(srcContext.Preds);
 
