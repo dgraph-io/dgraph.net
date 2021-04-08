@@ -49,6 +49,7 @@ namespace Dgraph.Transactions
             HasMutated = true;
 
             req.StartTs = Context.StartTs;
+            req.Hash = Context.Hash;
 
             var response = await Client.DgraphExecute(
                 async (dg) => Results.Ok<Response>(new Response(await dg.QueryAsync(req, opts))),

@@ -72,6 +72,7 @@ namespace Dgraph.Transactions
                 request.Query = queryString;
                 request.Vars.Add(varMap);
                 request.StartTs = Context.StartTs;
+                request.Hash = Context.Hash;
                 request.ReadOnly = ReadOnly;
                 request.BestEffort = BestEffort;
 
