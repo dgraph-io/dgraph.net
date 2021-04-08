@@ -98,6 +98,16 @@ namespace Dgraph {
             );
         }
 
+        public async Task<FluentResults.Result> Login(Api.LoginRequest lr, CallOptions? options = null) {
+            return await DgraphExecute(
+                async (dg) => {
+                    await dg.LoginAsync(lr, options ?? new CallOptions());
+                    return Results.Ok();
+                },
+                (rpcEx) => Results.Fail(new FluentResults.ExceptionalError(rpcEx))
+            );
+        }
+
         public async Task<T> DgraphExecute<T>(
             Func<Api.Dgraph.DgraphClient, Task<T>> execute, 
             Func<RpcException, T> onFail
