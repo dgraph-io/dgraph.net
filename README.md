@@ -23,6 +23,8 @@ and understand how to run and work with Dgraph.
     - [Running a Query](#running-a-query)
     - [Running an Upsert: Query + Mutation](#running-an-upsert-query--mutation)
     - [Committing a Transaction](#committing-a-transaction)
+    - [Setting Metadata Headers](#setting-metadata-headers)
+    - [Connecting To Dgraph Cloud Endpoint](#connecting-to-dgraph-cloud-endpoint)
     - [Cleanup Resources](#cleanup-resources)
 
 ## Install
@@ -194,19 +196,19 @@ var options = new CallOptions(headers: metadata);
 client.Alter(op, options)
 ```
 
-### Connecting To Slash Endpoint
+### Connecting To Dgraph Cloud Endpoint
 
-Please use the following snippet to connect to a Slash GraphQL or Slash Enterprise backend.
+Please use the following snippet to connect to a Slash GraphQL or Dgraph Cloud backend.
 
 
 ```c#
-var client = new DgraphClient(SlashChannel.Create("127.0.0.1:9080", "api-key-here"));
+var client = new DgraphClient(SlashChannel.Create("frozen-mango.eu-central-1.aws.cloud.dgraph.io:443", "<api-key>"));
 ```
 
 
 ### Login to Namespace
 
-Please use the following snippet to connect to a Slash GraphQL or Slash Enterprise backend.
+Please use the following snippet to connect to a Slash GraphQL or Dgraph Cloud backend.
 
 
 ```c#
