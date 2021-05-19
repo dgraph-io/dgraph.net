@@ -3,14 +3,17 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using System.Threading.Tasks;
 
-namespace Dgraph {
-    public static class SlashChannel {
-        public static GrpcChannel Create(string address, string apiKey) {
+namespace Dgraph
+{
+    public static class SlashChannel
+    {
+        public static GrpcChannel Create(string address, string apiKey)
+        {
             var credentials = CallCredentials.FromInterceptor((context, metadata) =>
             {
                 if (!string.IsNullOrEmpty(apiKey))
                 {
-                    metadata.Add("Authorization", apiKey);
+                    metadata.Add("DG-Auth", apiKey);
                 }
                 return Task.CompletedTask;
             });
@@ -24,4 +27,4 @@ namespace Dgraph {
             return channel;
         }
     }
-} 
+}
