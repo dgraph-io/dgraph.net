@@ -47,7 +47,8 @@ Each release of this client will support the equivalent Dgraph release. For exam
 Make a new client by passing in one or more GRPC channels pointing to alphas.
 
 ```c#
-var client = new DgraphClient(new Channel("127.0.0.1:9080", ChannelCredentials.Insecure));
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+var client = new DgraphClient(GrpcChannel.ForAddress("http://localhost:9080"), new GrpcChannelOptions { Credentials = ChannelCredentials.Insecure }));
 ```
 
 
@@ -136,7 +137,7 @@ var query = @"query all($a: string) {
   }
 }";
 
-var vars = new Dictionary<string,string> { { $a: "Alice" } };
+var vars = new Dictionary<string,string> { { "$a" , "Alice" } };
 var res = await dgraphClient.NewReadOnlyTransaction().QueryWithVars(query, vars);
 
 // Print results.
