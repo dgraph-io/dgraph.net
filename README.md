@@ -136,7 +136,7 @@ var query = @"query all($a: string) {
   }
 }";
 
-var vars = new Dictionary<string,string> { { $a: "Alice" } };
+var vars = new Dictionary<string,string> { { "$a", "Alice" } };
 var res = await dgraphClient.NewReadOnlyTransaction().QueryWithVars(query, vars);
 
 // Print results.
@@ -152,10 +152,10 @@ To know more about upsert, we highly recommend going through the docs at https:/
 ```c#
 var query = @"
   query {
-    user as var(func: eq(email, \"wrong_email@dgraph.io\"))
+    user as var(func: eq(email, ""wrong_email@dgraph.io""))
   }";
 
-var mutation = new MutationBuilder{ SetNquads = "`uid(user) <email> \"correct_email@dgraph.io\" ." };
+var mutation = new MutationBuilder{ SetNquads = "uid(user) <email> \"correct_email@dgraph.io\" ." };
 
 var request = new RequestBuilder{ Query = query, CommitNow = true }.withMutation(mutation);
 
