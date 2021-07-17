@@ -43,6 +43,11 @@ namespace Dgraph {
             }
         }
 
+        public DgraphClient(Api.Dgraph.DgraphClient client)
+        {
+            dgraphs.Add(client);
+        }
+
         // 
         // ------------------------------------------------------
         //              Transactions

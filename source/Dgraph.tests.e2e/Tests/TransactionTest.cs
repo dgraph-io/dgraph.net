@@ -18,7 +18,7 @@ namespace Dgraph.tests.e2e.Tests
 
     public class TransactionTest : DgraphDotNetE2ETest {
 
-        public TransactionTest(DgraphClientFactory clientFactory) : base(clientFactory) { }
+        public TransactionTest(IDgraphClientFactory clientFactory) : base(clientFactory) { }
 
         public async override Task Setup() {
             await base.Setup();

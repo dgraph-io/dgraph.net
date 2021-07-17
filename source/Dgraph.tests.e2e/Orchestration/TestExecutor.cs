@@ -11,9 +11,9 @@ namespace Dgraph.tests.e2e.Orchestration
         private List<Exception> _Exceptions = new List<Exception>();
 
         private readonly TestFinder TestFinder;
-        private readonly DgraphClientFactory ClientFactory;
+        private readonly IDgraphClientFactory ClientFactory;
 
-        public TestExecutor(TestFinder testFinder, DgraphClientFactory clientFactory) {
+        public TestExecutor(TestFinder testFinder, IDgraphClientFactory clientFactory) {
             TestFinder = testFinder;
             ClientFactory = clientFactory;
         }
