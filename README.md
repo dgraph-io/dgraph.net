@@ -1,4 +1,4 @@
-# Dgraph.net ![Nuget](https://img.shields.io/nuget/v/dgraph) [![Build Status](https://teamcity.dgraph.io/guestAuth/app/rest/builds/buildType:(id:DgraphNet_Build)/statusIcon.svg)](https://teamcity.dgraph.io/viewLog.html?buildTypeId=DgraphNet_Build&buildId=lastFinished&guest=1)
+# Dgraph.net ![Nuget](https://img.shields.io/nuget/v/dgraph)
 
 This client follows the [Dgraph Go client][goclient] closely.
 
