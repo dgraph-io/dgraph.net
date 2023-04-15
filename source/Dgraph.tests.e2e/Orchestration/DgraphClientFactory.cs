@@ -6,7 +6,7 @@ using Serilog;
 
 namespace Dgraph.tests.e2e.Orchestration
 {
-    public class DgraphClientFactory {
+    public class DgraphClientFactory : IDgraphClientFactory {
 
         private bool printed;
 

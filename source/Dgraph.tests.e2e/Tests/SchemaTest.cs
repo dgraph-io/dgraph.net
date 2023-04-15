@@ -11,7 +11,7 @@ using System.Threading;
 namespace Dgraph.tests.e2e.Tests
 {
     public class SchemaTest : DgraphDotNetE2ETest {
-        public SchemaTest(DgraphClientFactory clientFactory) : base(clientFactory) { }
+        public SchemaTest(IDgraphClientFactory clientFactory) : base(clientFactory) { }
 
         public async override Task Test() {
             using(var client = await ClientFactory.GetDgraphClient()) {

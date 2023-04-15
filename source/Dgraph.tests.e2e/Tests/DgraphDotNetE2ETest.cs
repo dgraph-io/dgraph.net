@@ -10,13 +10,13 @@ using Microsoft.Extensions.FileProviders;
 
 namespace Dgraph.tests.e2e.Tests {
     public abstract class DgraphDotNetE2ETest {
-        protected readonly DgraphClientFactory ClientFactory;
+        protected readonly IDgraphClientFactory ClientFactory;
 
         protected readonly Assent.Configuration AssentConfiguration;
 
         private readonly IFileProvider EmbeddedProvider;
 
-        public DgraphDotNetE2ETest(DgraphClientFactory clientFactory) {
+        public DgraphDotNetE2ETest(IDgraphClientFactory clientFactory) {
             ClientFactory = clientFactory;
 
             AssentConfiguration = new Assent.Configuration()

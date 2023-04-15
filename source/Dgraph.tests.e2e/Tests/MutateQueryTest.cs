@@ -15,7 +15,7 @@ namespace Dgraph.tests.e2e.Tests
 
         private Person Person1, Person2, Person3;
 
-        public MutateQueryTest(DgraphClientFactory clientFactory) : base(clientFactory) { }
+        public MutateQueryTest(IDgraphClientFactory clientFactory) : base(clientFactory) { }
 
         public async override Task Setup() {
             await base.Setup();

@@ -10,6 +10,7 @@ using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Grpc.Net.Client;
 
 namespace Dgraph.tests.e2e
 {
@@ -36,30 +37,24 @@ namespace Dgraph.tests.e2e
                     .ReadFrom.Configuration(config)
                     .CreateLogger();
 
-                var services = new ServiceCollection();
-
-                // Inject in every possible test type so that DI will be able to
-                // mint up these for me without me having to do anything to hydrate
-                // the objects.
-                Type baseTestType = typeof(DgraphDotNetE2ETest);
-                var assembly = typeof(DgraphDotNetE2ETest).Assembly;
-                IEnumerable<Type> testTypes = assembly.GetTypes().Where(t => t.IsSubclassOf(baseTestType));
-                foreach (var testType in testTypes) {
-                    services.AddTransient(testType);
-                }
-
-                services.AddSingleton<TestFinder>();
-                services.AddTransient<TestExecutor>();
-                services.AddScoped<DgraphClientFactory>();
-
-                var serviceProvider = services.BuildServiceProvider();
+                Log.Information("Testing default way of channel creation");
 
                 var app = new CommandLineApplication<Program>();
                 app.Conventions
                     .UseDefaultConventions()
-                    .UseConstructorInjection(serviceProvider);
+                    .UseConstructorInjection(GetDefaultServiceProvider());
 
                 app.Execute(args);
+
+                Log.Information("Testing gRPC client factory to inject gRPC client in a centralized way");
+
+                app = new CommandLineApplication<Program>();
+                app.Conventions
+                    .UseDefaultConventions()
+                    .UseConstructorInjection(GetClientInjectionServiceProvider("http://127.0.0.1:9080"));
+
+                app.Execute(args);
+
                 return 0;
 
             } catch (AggregateException aggEx) {
@@ -80,6 +75,56 @@ namespace Dgraph.tests.e2e
                 Log.CloseAndFlush();
             }
             return 1;
+        }
+
+        private static ServiceProvider GetDefaultServiceProvider()
+        {
+            IServiceCollection services = new ServiceCollection();
+
+            // Inject in every possible test type so that DI will be able to
+            // mint up these for me without me having to do anything to hydrate
+            // the objects.
+            Type baseTestType = typeof(DgraphDotNetE2ETest);
+            var assembly = typeof(DgraphDotNetE2ETest).Assembly;
+            IEnumerable<Type> testTypes = assembly.GetTypes().Where(t => t.IsSubclassOf(baseTestType));
+            foreach (var testType in testTypes)
+            {
+                services.AddTransient(testType);
+            }
+
+            services.AddSingleton<TestFinder>();
+            services.AddTransient<TestExecutor>();
+            services.AddScoped<IDgraphClientFactory, DgraphClientFactory>();
+
+            return services.BuildServiceProvider();
+        }
+
+        private static ServiceProvider GetClientInjectionServiceProvider(string address)
+        {
+            IServiceCollection services = new ServiceCollection();
+
+            // Inject in every possible test type so that DI will be able to
+            // mint up these for me without me having to do anything to hydrate
+            // the objects.
+            Type baseTestType = typeof(DgraphDotNetE2ETest);
+            var assembly = typeof(DgraphDotNetE2ETest).Assembly;
+            IEnumerable<Type> testTypes = assembly.GetTypes().Where(t => t.IsSubclassOf(baseTestType));
+            foreach (var testType in testTypes)
+            {
+                services.AddTransient(testType);
+            }
+
+            services.AddGrpcClient<Api.Dgraph.DgraphClient>(o =>
+            {
+                o.Address = new Uri(address);
+            });
+
+            services.AddSingleton<TestFinder>();
+            services.AddTransient<TestExecutor>();
+            services.AddTransient<DgraphClient>();
+            services.AddScoped<IDgraphClientFactory, InjectedDgraphClientFactory>();
+
+            return services.BuildServiceProvider();
         }
 
         public Program(IServiceProvider serviceProvider, TestFinder testFinder, TestExecutor testExecutor) {
