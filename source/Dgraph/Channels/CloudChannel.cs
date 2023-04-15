@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Dgraph
 {
-    public static class SlashChannel
+    public static class DgraphCloudChannel
     {
         public static GrpcChannel Create(string address, string apiKey)
         {

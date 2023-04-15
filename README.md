@@ -33,7 +33,12 @@ Install using nuget:
 
 ```sh
 dotnet add package Dgraph
+# or
+dotnet add package Dgraph --version 21.3.1.2
 ```
+
+>WARNING: Be aware that there may be other .NET packages with similar names. To verify the official package, please visit https://www.nuget.org/packages/Dgraph. Make sure you are using the correct and official package to avoid potential confusion.
+
 
 ## Supported Versions
 
@@ -203,17 +208,17 @@ client.Alter(op, options)
 
 ### Connecting To Dgraph Cloud Endpoint
 
-Please use the following snippet to connect to a Slash GraphQL or Dgraph Cloud backend.
+Please use the following snippet to connect to a Dgraph Cloud GraphQL or Dgraph Cloud backend.
 
 
 ```c#
-var client = new DgraphClient(SlashChannel.Create("frozen-mango.eu-central-1.aws.cloud.dgraph.io:443", "<api-key>"));
+var client = new DgraphClient(DgraphCloudChannel.Create("frozen-mango.grpc.eu-central-1.aws.cloud.dgraph.io", "<api-key>"));
 ```
-
+> Note that you should use the gRPC URI when using the Cloud.
 
 ### Login to Namespace
 
-Please use the following snippet to connect to a Slash GraphQL or Dgraph Cloud backend.
+Please use the following snippet to connect to a Dgraph Cloud GraphQL or Dgraph Cloud backend.
 
 
 ```c#

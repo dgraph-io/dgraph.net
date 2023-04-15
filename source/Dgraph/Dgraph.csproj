@@ -5,7 +5,7 @@
     <LangVersion>8.0</LangVersion>
 
     <PackageId>Dgraph</PackageId>
-    
+
     <Title>Dgraph Client for .NET </Title>
     <Authors>Michael Compton, Ahmed El Bannan</Authors>
     <Company>Dgraph Labs Inc</Company>
@@ -17,7 +17,7 @@
     <IncludeSymbols>True</IncludeSymbols>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageVersion>21.03.01.02</PackageVersion>
-    <PackageLicenseUrl>https://github.com/dgraph-io/dgraph.net/LICENSE.txt</PackageLicenseUrl>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
@@ -30,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="$(SolutionDir)\LICENSE.txt" Pack="true" PackagePath="$(PackageLicenseFile)"/>
     <Protobuf Include="github.com/dgraph-io/dgraph/protos/pb.proto" />
     <Protobuf Include="github.com/dgraph-io/dgo/protos/api.proto" />
     <Protobuf Include="github.com/dgraph-io/badger/pb/badger.proto" />
