@@ -72,6 +72,7 @@ namespace Dgraph.Transactions
                 request.Query = queryString;
                 request.Vars.Add(varMap);
                 request.StartTs = Context.StartTs;
+                request.Hash = Context.Hash;
                 request.ReadOnly = ReadOnly;
                 request.BestEffort = BestEffort;
 
@@ -115,6 +116,8 @@ namespace Dgraph.Transactions
             if (Context.StartTs != srcContext.StartTs) {
                 return Results.Fail(new StartTsMismatch());
             }
+
+            Context.Hash = srcContext.Hash;
 
             Context.Keys.Add(srcContext.Keys);
             Context.Preds.Add(srcContext.Preds);

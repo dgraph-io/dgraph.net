@@ -17,6 +17,7 @@
 using System;
 using System.Threading.Tasks;
 using Dgraph.Transactions;
+using Grpc.Core;
 
 namespace Dgraph
 {
@@ -33,12 +34,12 @@ namespace Dgraph
         /// <summary>
         /// Alter the Dgraph database (alter schema, drop everything, etc.).
         /// </summary>
-        Task<FluentResults.Result> Alter(Api.Operation op);
+        Task<FluentResults.Result> Alter(Api.Operation op, CallOptions? options = null);
 
         /// <summary>
         /// Returns the Dgraph version string.
         /// </summary>
-        Task<FluentResults.Result<string>> CheckVersion();
+        Task<FluentResults.Result<string>> CheckVersion(CallOptions? options = null);
 
         /// <summary>
         /// Create a transaction that can only query.  
