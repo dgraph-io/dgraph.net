@@ -1,6 +1,3 @@
-# Visual Studio Code
-.vscode
-
 # Project Todo reminder
 TODO
 
@@ -10,6 +7,19 @@ TODO
 output
 artifacts
 
+# more .NET
+*.exe
+*.dll
+*.pdb
+*.user
+*.suo
+*.cache
+*.log
+*.vs
+*.dbmdl
+*.dbproj.schemaview
+
+
 # Cake
 tools/**
 !tools/packages.config
@@ -17,3 +27,5 @@ tools/**
 # ignore test runs
 E2E-Logs
 
+# JetBrains IntelliJ IDEA
+.idea/

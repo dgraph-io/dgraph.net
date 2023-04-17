@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Dgraph Labs, Inc. and Contributors
+ * Copyright 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -45,8 +45,9 @@ namespace Dgraph.Transactions
     /// }
     /// </code>
     /// </summary>
-    public interface ITransaction : IQuery, IDisposable {
-    
+    public interface ITransaction : IQuery, IDisposable
+    {
+
         /// <summary>
         /// Run a request that may involve multiple mutations.  
         /// If CommitNow is set on the request, then
@@ -54,7 +55,7 @@ namespace Dgraph.Transactions
         /// </summary>
         Task<FluentResults.Result<Response>> Mutate(
             RequestBuilder request,
-            CallOptions? options = null    
+            CallOptions? options = null
         );
 
         /// <summary>
@@ -65,7 +66,7 @@ namespace Dgraph.Transactions
             string setJson = null,
             string deleteJson = null,
             bool commitNow = false,
-            CallOptions? options = null    
+            CallOptions? options = null
         );
 
         /// <summary>
@@ -73,7 +74,7 @@ namespace Dgraph.Transactions
         /// and the transaction can't be used again.
         /// </summary>
         Task<FluentResults.Result> Discard(CallOptions? options = null);
-        
+
         /// <summary>
         /// Commit the transaction.  IF successful, any mutations in this
         /// transaction are committed in Dgraph.  The transaction can't be 

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023 Dgraph Labs, Inc. and Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ 
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,21 +27,24 @@ using Dgraph.Transactions;
 
 namespace Dgraph.tests.e2e.Tests
 {
-    public class MutateQueryTest : DgraphDotNetE2ETest {
+    public class MutateQueryTest : DgraphDotNetE2ETest
+    {
 
         private Person Person1, Person2, Person3;
 
         public MutateQueryTest(DgraphClientFactory clientFactory) : base(clientFactory) { }
 
-        public async override Task Setup() {
+        public async override Task Setup()
+        {
             await base.Setup();
 
-            var alterSchemaResult = await 
+            var alterSchemaResult = await
                 (await ClientFactory.GetDgraphClient()).Alter(
-                    new Operation{ Schema = ReadEmbeddedFile("test.schema") });
+                    new Operation { Schema = ReadEmbeddedFile("test.schema") });
             AssertResultIsSuccess(alterSchemaResult);
 
-            Person1 = new Person() {
+            Person1 = new Person()
+            {
                 Uid = "_:Person1",
                 Name = "Person1",
                 Dob = new DateTime(1991, 1, 1),
@@ -33,7 +52,8 @@ namespace Dgraph.tests.e2e.Tests
                 Scores = { 1, 32, 45, 62 }
             };
 
-            Person2 = new Person() {
+            Person2 = new Person()
+            {
                 Uid = "_:Person2",
                 Name = "Person2",
                 Dob = new DateTime(1992, 1, 1),
@@ -41,7 +61,8 @@ namespace Dgraph.tests.e2e.Tests
                 Scores = { 3, 2, 1 }
             };
 
-            Person3 = new Person() {
+            Person3 = new Person()
+            {
                 Uid = "_:Person3",
                 Name = "Person3",
                 Dob = new DateTime(1993, 1, 1),
@@ -51,8 +72,10 @@ namespace Dgraph.tests.e2e.Tests
             Person3.Friends.AddRange(new List<Person> { Person1 });
         }
 
-        public async override Task Test() {
-            using(var client = await ClientFactory.GetDgraphClient()) {
+        public async override Task Test()
+        {
+            using (var client = await ClientFactory.GetDgraphClient())
+            {
                 await AddThreePeople(client);
                 await QueryAllThreePeople(client);
                 await AlterAPerson(client);
@@ -61,9 +84,11 @@ namespace Dgraph.tests.e2e.Tests
             }
         }
 
-        private async Task AddThreePeople(IDgraphClient client) {
+        private async Task AddThreePeople(IDgraphClient client)
+        {
 
-            using(var transaction = client.NewTransaction()) {
+            using (var transaction = client.NewTransaction())
+            {
 
                 // Serialize the objects to json in whatever way works best for you.
                 //
@@ -103,14 +128,16 @@ namespace Dgraph.tests.e2e.Tests
 
                 var transactionResult = await transaction.Commit();
                 AssertResultIsSuccess(transactionResult);
-            }          
+            }
         }
 
-        private async Task QueryAllThreePeople(IDgraphClient client) {
+        private async Task QueryAllThreePeople(IDgraphClient client)
+        {
 
             var people = new List<Person> { Person1, Person2, Person3 };
 
-            foreach (var person in people) {
+            foreach (var person in people)
+            {
                 var queryPerson = await client.NewReadOnlyTransaction().
                     Query(FriendQueries.QueryByUid(person.Uid));
                 AssertResultIsSuccess(queryPerson, "Query failed");
@@ -120,8 +147,10 @@ namespace Dgraph.tests.e2e.Tests
             }
         }
 
-        private async Task AlterAPerson(IDgraphClient client) {
-            using(var transaction = client.NewTransaction()) {
+        private async Task AlterAPerson(IDgraphClient client)
+        {
+            using (var transaction = client.NewTransaction())
+            {
                 Person3.Friends.Add(Person2);
 
                 // This will serialize the whole object.  You might not want to
@@ -146,7 +175,8 @@ namespace Dgraph.tests.e2e.Tests
             FriendQueries.AssertStringIsPerson(queryPerson.Value.Json, Person3);
         }
 
-        private async Task QueryWithVars(IDgraphClient client) {
+        private async Task QueryWithVars(IDgraphClient client)
+        {
 
             var queryPerson = await client.NewReadOnlyTransaction().QueryWithVars(
                 FriendQueries.QueryByName,
@@ -156,8 +186,10 @@ namespace Dgraph.tests.e2e.Tests
             FriendQueries.AssertStringIsPerson(queryPerson.Value.Json, Person3);
         }
 
-        private async Task DeleteAPerson(IDgraphClient client) {
-            using(var transaction = client.NewTransaction()) {
+        private async Task DeleteAPerson(IDgraphClient client)
+        {
+            using (var transaction = client.NewTransaction())
+            {
 
                 // delete a node by passing JSON like this to delete
                 var deleteResult = await transaction.Mutate(

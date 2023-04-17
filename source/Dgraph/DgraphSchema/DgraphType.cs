@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Dgraph Labs, Inc. and Contributors
+ * Copyright 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Dgraph.Schema {
+namespace Dgraph.Schema
+{
 
-    public class DgraphType {
+    public class DgraphType
+    {
 
         public string Name { get; set; }
 
         public List<DgraphField> Fields { get; set; }
 
-        public override string ToString() => 
+        public override string ToString() =>
             "type " + Name + " {\n" +
             String.Join("\n", Fields.Select(f => "\t" + f.ToString())) + "\n" +
             "}";

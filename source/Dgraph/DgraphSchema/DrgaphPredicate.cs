@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Dgraph Labs, Inc. and Contributors
+ * Copyright 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,8 @@ using System.Collections.Generic;
 namespace Dgraph.Schema
 {
 
-    public class DrgaphPredicate {
+    public class DrgaphPredicate
+    {
         public string Predicate { get; set; }
         public string Type { get; set; }
         public bool Index { get; set; }
@@ -31,9 +32,11 @@ namespace Dgraph.Schema
         public bool Upsert { get; set; }
         public bool Lang { get; set; }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             string indexFragment = "";
-            if (Index) {
+            if (Index)
+            {
                 indexFragment = "@index(" + String.Join(",", Tokenizer) + ") ";
             }
             var reverseFragment = Reverse ? "@reverse " : "";
