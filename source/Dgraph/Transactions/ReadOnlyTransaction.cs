@@ -25,7 +25,7 @@ using Grpc.Core;
 namespace Dgraph.Transactions
 {
 
-    internal class ReadOnlyTransaction : IQuery {
+    public class ReadOnlyTransaction : IQuery {
 
         public TransactionState TransactionState { get; protected set; }
 

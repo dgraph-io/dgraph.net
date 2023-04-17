@@ -17,3 +17,4 @@ tools/**
 # ignore test runs
 E2E-Logs
 
+.vs

@@ -23,11 +23,11 @@ using Grpc.Core;
 namespace Dgraph.Transactions
 {
 
-    internal class Transaction : ReadOnlyTransaction, ITransaction {
+    public class Transaction : ReadOnlyTransaction, ITransaction {
 
         private bool HasMutated;
 
-        internal Transaction(IDgraphClientInternal client) : base(client, false, false) { }
+        public Transaction(IDgraphClientInternal client) : base(client, false, false) { }
 
         public async Task<Result<Response>> Mutate(
             RequestBuilder request, 
@@ -83,8 +83,8 @@ namespace Dgraph.Transactions
         }
 
         public async Task<FluentResults.Result<Response>> Mutate(
-            string setJson = null,
-            string deleteJson = null,
+            string? setJson = null,
+            string? deleteJson = null,
             bool commitNow = false,
             CallOptions? options = null    
         ) => await Mutate(

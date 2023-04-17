@@ -25,7 +25,7 @@ namespace Dgraph
     /// Internal dealings of clients with Dgraph --- Not part of the
     /// external interface
     /// </summary>
-    internal interface IDgraphClientInternal {
+    public interface IDgraphClientInternal {
 
         Task<T> DgraphExecute<T>(
             Func<Api.Dgraph.DgraphClient, Task<T>> execute, 

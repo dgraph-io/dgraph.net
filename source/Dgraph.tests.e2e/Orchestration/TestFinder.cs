@@ -12,7 +12,7 @@ namespace Dgraph.tests.e2e.Orchestration {
             ServiceProvider = serviceProvider;
         }
 
-        public IReadOnlyList<string> FindTestNames(IEnumerable<string> prefixes = null) {
+        public IReadOnlyList<string> FindTestNames(IEnumerable<string>? prefixes = null) {
 
             Type baseTestType = typeof(DgraphDotNetE2ETest);
             var allTestNames = typeof(DgraphDotNetE2ETest).Assembly.GetTypes().Where(t => t.IsSubclassOf(baseTestType)).Select(t => t.Name);
