@@ -20,29 +20,37 @@ using Api;
 namespace Dgraph.Transactions
 {
 
-    public class RequestBuilder {
+    public class RequestBuilder
+    {
 
         internal Request Request = new Request();
 
-        public string Query {
-            get {
+        public string Query
+        {
+            get
+            {
                 return Request.Query;
             }
-            set {
+            set
+            {
                 Request.Query = value;
             }
         }
 
-        public bool CommitNow {
-            get {
+        public bool CommitNow
+        {
+            get
+            {
                 return Request.CommitNow;
             }
-            set {
+            set
+            {
                 Request.CommitNow = value;
             }
         }
 
-        public RequestBuilder WithMutations(params MutationBuilder[] mutations) {
+        public RequestBuilder WithMutations(params MutationBuilder[] mutations)
+        {
             Request.Mutations.Add(mutations.Select(mb => mb.Mutation));
             return this;
         }

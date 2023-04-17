@@ -10,12 +10,15 @@ using Grpc.Core;
 using NSubstitute;
 using NUnit.Framework;
 
-namespace Dgraph.tests.Transactions {
+namespace Dgraph.tests.Transactions
+{
 
-    public class MutateFixture : TransactionFixtureBase {
-        
+    public class MutateFixture : TransactionFixtureBase
+    {
+
         [Test]
-        public async Task Mutate_EmptyMutationDoesNothing() {
+        public async Task Mutate_EmptyMutationDoesNothing()
+        {
             (var client, _) = MinimalClient();
             var txn = new Transaction(client);
 
@@ -29,13 +32,15 @@ namespace Dgraph.tests.Transactions {
         }
 
         [Test]
-        public async Task Mutate_CommitNowChangesStateToCommitted() {
+        public async Task Mutate_CommitNowChangesStateToCommitted()
+        {
             (var client, _) = MinimalClient();
             var txn = new Transaction(client);
-                        
-            var req = new RequestBuilder(){
+
+            var req = new RequestBuilder()
+            {
                 CommitNow = true
-            }.WithMutations(new MutationBuilder{ SetJson = "json" });
+            }.WithMutations(new MutationBuilder { SetJson = "json" });
             await txn.Mutate(req);
 
             txn.TransactionState.Should().Be(TransactionState.Committed);
@@ -48,13 +53,14 @@ namespace Dgraph.tests.Transactions {
 
 
         [Test]
-        public async Task Mutate_FailsOnException() {
+        public async Task Mutate_FailsOnException()
+        {
             (var client, _) = MinimalClient();
 
             var txn = new Transaction(client);
 
             var req = new RequestBuilder().
-                WithMutations(new MutationBuilder{ SetJson = "json" });
+                WithMutations(new MutationBuilder { SetJson = "json" });
             await txn.Mutate(req);
 
             client.DgraphExecute(
@@ -70,7 +76,8 @@ namespace Dgraph.tests.Transactions {
         }
 
         [Test]
-        public async Task Mutate_PassesBackResult() {
+        public async Task Mutate_PassesBackResult()
+        {
             (var client, var assigned) = MinimalClient();
             var txn = new Transaction(client);
 
@@ -83,10 +90,10 @@ namespace Dgraph.tests.Transactions {
                     Results.Ok(new Response(response)));
 
             var req = new RequestBuilder().
-                WithMutations(new MutationBuilder{ SetJson = "json" });
+                WithMutations(new MutationBuilder { SetJson = "json" });
             await txn.Mutate(req);
             var result = await txn.Mutate(req);
-            
+
             result.IsSuccess.Should().BeTrue();
             result.Value.DgraphResponse.Should().BeEquivalentTo(response);
         }

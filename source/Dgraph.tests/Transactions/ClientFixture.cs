@@ -1,6 +1,7 @@
 namespace Dgraph.tests.Transactions
 {
-    public class ClientFixture {
+    public class ClientFixture
+    {
 
         // [Test]
         // public async Task ReadOnlyTransactionsAreReadonly() {

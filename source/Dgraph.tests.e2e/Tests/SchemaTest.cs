@@ -10,11 +10,14 @@ using System.Threading;
 
 namespace Dgraph.tests.e2e.Tests
 {
-    public class SchemaTest : DgraphDotNetE2ETest {
+    public class SchemaTest : DgraphDotNetE2ETest
+    {
         public SchemaTest(DgraphClientFactory clientFactory) : base(clientFactory) { }
 
-        public async override Task Test() {
-            using(var client = await ClientFactory.GetDgraphClient()) {
+        public async override Task Test()
+        {
+            using (var client = await ClientFactory.GetDgraphClient())
+            {
                 await InitialSchemaIsAsExpected(client);
                 await AlterSchemAsExpected(client);
                 await AlterSchemaAgainAsExpected(client);
@@ -24,7 +27,8 @@ namespace Dgraph.tests.e2e.Tests
             }
         }
 
-        private async Task InitialSchemaIsAsExpected(IDgraphClient client) {
+        private async Task InitialSchemaIsAsExpected(IDgraphClient client)
+        {
             var response = await client.NewReadOnlyTransaction().Query("schema {}");
             AssertResultIsSuccess(response);
 
@@ -32,9 +36,10 @@ namespace Dgraph.tests.e2e.Tests
             this.Assent(schema.ToString(), AssentConfiguration);
         }
 
-        private async Task AlterSchemAsExpected(IDgraphClient client) {
+        private async Task AlterSchemAsExpected(IDgraphClient client)
+        {
             var alterSchemaResult = await client.Alter(
-                new Operation{ Schema = ReadEmbeddedFile("test.schema") });
+                new Operation { Schema = ReadEmbeddedFile("test.schema") });
             AssertResultIsSuccess(alterSchemaResult);
 
             // After an Alter, Dgraph computes indexes in the background.
@@ -51,9 +56,10 @@ namespace Dgraph.tests.e2e.Tests
             this.Assent(schema.ToString(), AssentConfiguration);
         }
 
-        private async Task AlterSchemaAgainAsExpected(IDgraphClient client) {
+        private async Task AlterSchemaAgainAsExpected(IDgraphClient client)
+        {
             var alterSchemaResult = await client.Alter(
-                new Operation{ Schema = ReadEmbeddedFile("altered.schema") });
+                new Operation { Schema = ReadEmbeddedFile("altered.schema") });
             AssertResultIsSuccess(alterSchemaResult);
 
             Thread.Sleep(TimeSpan.FromSeconds(5));
@@ -65,7 +71,8 @@ namespace Dgraph.tests.e2e.Tests
             this.Assent(schema.ToString(), AssentConfiguration);
         }
 
-        private async Task SchemaQueryWithRestrictions(IDgraphClient client) {
+        private async Task SchemaQueryWithRestrictions(IDgraphClient client)
+        {
             var response = await client.NewReadOnlyTransaction().Query(
                 "schema(pred: [name, friends, dob, scores]) { type }");
             AssertResultIsSuccess(response);
@@ -74,7 +81,8 @@ namespace Dgraph.tests.e2e.Tests
             this.Assent(schema.ToString(), AssentConfiguration);
         }
 
-        private async Task ErrorsResultInFailedQuery(IDgraphClient client) {
+        private async Task ErrorsResultInFailedQuery(IDgraphClient client)
+        {
             // maformed
             var q1result = await client.NewReadOnlyTransaction().Query(
                 "schema(pred: [name, friends, dob, scores]) { type ");

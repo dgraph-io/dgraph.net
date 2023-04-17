@@ -16,20 +16,24 @@ using Api;
 namespace Dgraph.tests.e2e.Tests
 {
 
-    public class TransactionTest : DgraphDotNetE2ETest {
+    public class TransactionTest : DgraphDotNetE2ETest
+    {
 
         public TransactionTest(DgraphClientFactory clientFactory) : base(clientFactory) { }
 
-        public async override Task Setup() {
+        public async override Task Setup()
+        {
             await base.Setup();
-            var alterSchemaResult = await 
+            var alterSchemaResult = await
                 (await ClientFactory.GetDgraphClient()).Alter(
-                    new Operation{ Schema = ReadEmbeddedFile("test.schema") });
+                    new Operation { Schema = ReadEmbeddedFile("test.schema") });
             AssertResultIsSuccess(alterSchemaResult);
         }
 
-        public async override Task Test() {
-            using(var client = await ClientFactory.GetDgraphClient()) {
+        public async override Task Test()
+        {
+            using (var client = await ClientFactory.GetDgraphClient())
+            {
 
                 // mutate & query interleaving
                 await NoDirtyReads(client);
@@ -44,14 +48,16 @@ namespace Dgraph.tests.e2e.Tests
 
         #region mutate-query
 
-        private async Task NoDirtyReads(IDgraphClient client) {
+        private async Task NoDirtyReads(IDgraphClient client)
+        {
 
             var txn1 = client.NewTransaction();
             var person = MintAPerson(nameof(NoDirtyReads));
             var json = JsonConvert.SerializeObject(person);
 
             var transactionResult = await txn1.Mutate(new RequestBuilder().
-                WithMutations(new MutationBuilder {
+                WithMutations(new MutationBuilder
+                {
                     SetJson = json
                 }));
             AssertResultIsSuccess(transactionResult, "Mutation failed");
@@ -82,7 +88,8 @@ namespace Dgraph.tests.e2e.Tests
             FriendQueries.AssertStringIsPerson(queryByName.Value.Json, person);
         }
 
-        private async Task TransactionsAreSerlializable(IDgraphClient client) {
+        private async Task TransactionsAreSerlializable(IDgraphClient client)
+        {
 
             var txn1 = client.NewTransaction();
             var txn2 = client.NewTransaction();
@@ -90,7 +97,8 @@ namespace Dgraph.tests.e2e.Tests
             var person = MintAPerson(nameof(TransactionsAreSerlializable));
             var json = JsonConvert.SerializeObject(person);
             var transactionResult = await txn1.Mutate(new RequestBuilder().
-                WithMutations(new MutationBuilder {
+                WithMutations(new MutationBuilder
+                {
                     SetJson = json
                 }));
             AssertResultIsSuccess(transactionResult);
@@ -115,14 +123,16 @@ namespace Dgraph.tests.e2e.Tests
             await txn2.Discard();
         }
 
-        private async Task DiscardedTransactionsHaveNoEffect(IDgraphClient client) {
+        private async Task DiscardedTransactionsHaveNoEffect(IDgraphClient client)
+        {
 
             var txn1 = client.NewTransaction();
 
             var person = MintAPerson(nameof(DiscardedTransactionsHaveNoEffect));
             var json = JsonConvert.SerializeObject(person);
             var transactionResult = await txn1.Mutate(new RequestBuilder().
-                WithMutations(new MutationBuilder {
+                WithMutations(new MutationBuilder
+                {
                     SetJson = json
                 }));
             AssertResultIsSuccess(transactionResult);
@@ -149,7 +159,8 @@ namespace Dgraph.tests.e2e.Tests
 
         #region mutate-mutate
 
-        private async Task UnrelatedTransactionsDoNotConflict(IDgraphClient client) {
+        private async Task UnrelatedTransactionsDoNotConflict(IDgraphClient client)
+        {
 
             var txn1 = client.NewTransaction();
             var txn2 = client.NewTransaction();
@@ -159,19 +170,21 @@ namespace Dgraph.tests.e2e.Tests
 
             // Name has term and exact indexes, so these shouldn't clash
             var transactionResultTxn1 = await txn1.Mutate(new RequestBuilder().
-                WithMutations(new MutationBuilder {
+                WithMutations(new MutationBuilder
+                {
                     SetJson = JsonConvert.SerializeObject(personTxn1)
                 }));
             AssertResultIsSuccess(transactionResultTxn1);
             personTxn1.Uid = transactionResultTxn1.Value.Uids[personTxn1.Uid.Substring(2)];
 
             var transactionResultTxn2 = await txn2.Mutate(new RequestBuilder().
-                WithMutations(new MutationBuilder {
+                WithMutations(new MutationBuilder
+                {
                     SetJson = JsonConvert.SerializeObject(personTxn2)
                 }));
             AssertResultIsSuccess(transactionResultTxn2);
             personTxn2.Uid = transactionResultTxn2.Value.Uids[personTxn2.Uid.Substring(2)];
-            
+
             // Can't see the other result
             var queryByName = await txn2.QueryWithVars(
                 FriendQueries.QueryByName,
@@ -197,7 +210,8 @@ namespace Dgraph.tests.e2e.Tests
             FriendQueries.AssertStringIsPerson(queryByName.Value.Json, personTxn2);
         }
 
-        private async Task ConflictingTransactionsDontBothSucceed(IDgraphClient client) {
+        private async Task ConflictingTransactionsDontBothSucceed(IDgraphClient client)
+        {
 
             var txn1 = client.NewTransaction();
             var txn2 = client.NewTransaction();
@@ -206,14 +220,16 @@ namespace Dgraph.tests.e2e.Tests
             var personTxn2 = MintAPerson("Jane Person");
 
             var transactionResultTxn1 = await txn1.Mutate(new RequestBuilder().
-                WithMutations(new MutationBuilder {
+                WithMutations(new MutationBuilder
+                {
                     SetJson = JsonConvert.SerializeObject(personTxn1)
                 }));
             AssertResultIsSuccess(transactionResultTxn1);
             personTxn1.Uid = transactionResultTxn1.Value.Uids[personTxn1.Uid.Substring(2)];
 
             var transactionResultTxn2 = await txn2.Mutate(new RequestBuilder().
-                WithMutations(new MutationBuilder {
+                WithMutations(new MutationBuilder
+                {
                     SetJson = JsonConvert.SerializeObject(personTxn2)
                 }));
             AssertResultIsSuccess(transactionResultTxn2);
@@ -243,8 +259,10 @@ namespace Dgraph.tests.e2e.Tests
 
         #endregion
 
-        private Person MintAPerson(string name) {
-            return new Person() {
+        private Person MintAPerson(string name)
+        {
+            return new Person()
+            {
                 Uid = "_:person",
                 Name = name,
                 Dob = new DateTime(1991, 1, 1),

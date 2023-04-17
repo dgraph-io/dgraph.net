@@ -11,10 +11,12 @@ using NUnit.Framework;
 namespace Dgraph.tests.Transactions
 {
 
-    public class DiscardFixture : TransactionFixtureBase {
+    public class DiscardFixture : TransactionFixtureBase
+    {
 
         [Test]
-        public async Task Discard_SetsTransactionStateToAborted() {
+        public async Task Discard_SetsTransactionStateToAborted()
+        {
             var client = Substitute.For<IDgraphClientInternal>();
             var txn = new Transaction(client);
             await txn.Discard();
@@ -23,7 +25,8 @@ namespace Dgraph.tests.Transactions
         }
 
         [Test]
-        public async Task Discard_ClientNotReceiveDiscardIfNoMutation() {
+        public async Task Discard_ClientNotReceiveDiscardIfNoMutation()
+        {
             var client = Substitute.For<IDgraphClientInternal>();
             var txn = new Transaction(client);
             await txn.Discard();
@@ -34,13 +37,14 @@ namespace Dgraph.tests.Transactions
         }
 
         [Test]
-        public async Task Discard_ClientReceivedDiscardIfMutation() {
+        public async Task Discard_ClientReceivedDiscardIfMutation()
+        {
             (var client, _) = MinimalClient();
 
             var txn = new Transaction(client);
 
             var req = new RequestBuilder().
-                WithMutations(new MutationBuilder{ SetJson = "json" });
+                WithMutations(new MutationBuilder { SetJson = "json" });
             await txn.Mutate(req);
             await txn.Discard();
 
@@ -50,13 +54,14 @@ namespace Dgraph.tests.Transactions
         }
 
         [Test]
-        public async Task Discard_FailsOnException() {
+        public async Task Discard_FailsOnException()
+        {
             (var client, _) = MinimalClient();
 
             var txn = new Transaction(client);
 
             var req = new RequestBuilder().
-                WithMutations(new MutationBuilder{ SetJson = "json" });
+                WithMutations(new MutationBuilder { SetJson = "json" });
             await txn.Mutate(req);
 
             client.DgraphExecute(

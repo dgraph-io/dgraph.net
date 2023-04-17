@@ -20,7 +20,8 @@ using System.Collections.Generic;
 namespace Dgraph.Schema
 {
 
-    public class DrgaphPredicate {
+    public class DrgaphPredicate
+    {
         public string Predicate { get; set; }
         public string Type { get; set; }
         public bool Index { get; set; }
@@ -31,9 +32,11 @@ namespace Dgraph.Schema
         public bool Upsert { get; set; }
         public bool Lang { get; set; }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             string indexFragment = "";
-            if (Index) {
+            if (Index)
+            {
                 indexFragment = "@index(" + String.Join(",", Tokenizer) + ") ";
             }
             var reverseFragment = Reverse ? "@reverse " : "";

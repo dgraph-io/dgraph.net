@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,26 +23,30 @@ using Grpc.Core;
 namespace Dgraph.Transactions
 {
 
-    internal class Transaction : ReadOnlyTransaction, ITransaction {
+    internal class Transaction : ReadOnlyTransaction, ITransaction
+    {
 
         private bool HasMutated;
 
         internal Transaction(IDgraphClientInternal client) : base(client, false, false) { }
 
         public async Task<Result<Response>> Mutate(
-            RequestBuilder request, 
+            RequestBuilder request,
             CallOptions? options = null
-        ) {
+        )
+        {
             AssertNotDisposed();
 
             CallOptions opts = options ?? new CallOptions();
 
-            if (TransactionState != TransactionState.OK) {
+            if (TransactionState != TransactionState.OK)
+            {
                 return Results.Fail<Response>(new TransactionNotOK(TransactionState.ToString()));
             }
 
             var req = request.Request;
-            if (req.Mutations.Count == 0) {
+            if (req.Mutations.Count == 0)
+            {
                 return Results.Ok<Response>(new Response(new Api.Response()));
             }
 
@@ -56,19 +60,22 @@ namespace Dgraph.Transactions
                 (rpcEx) => Results.Fail<Response>(new ExceptionalError(rpcEx))
             );
 
-            if(response.IsFailed) {
+            if (response.IsFailed)
+            {
                 await Discard(); // Ignore error - user should see the original error.
 
                 TransactionState = TransactionState.Error; // overwrite the aborted value
                 return response;
             }
-                
-            if (req.CommitNow) {
+
+            if (req.CommitNow)
+            {
                 TransactionState = TransactionState.Committed;
             }
 
             var err = MergeContext(response.Value.DgraphResponse.Txn);
-            if (err.IsFailed) {
+            if (err.IsFailed)
+            {
                 // The WithReasons() here will turn this Ok, into a Fail.  So the result 
                 // and an error are in there like the Go lib.  But this can really only
                 // occur on an internal Dgraph error, so it's really an error
@@ -86,10 +93,11 @@ namespace Dgraph.Transactions
             string setJson = null,
             string deleteJson = null,
             bool commitNow = false,
-            CallOptions? options = null    
+            CallOptions? options = null
         ) => await Mutate(
-                new RequestBuilder{ CommitNow = commitNow}.WithMutations(
-                    new MutationBuilder {
+                new RequestBuilder { CommitNow = commitNow }.WithMutations(
+                    new MutationBuilder
+                    {
                         SetJson = setJson,
                         DeleteJson = deleteJson
                     }
@@ -97,8 +105,10 @@ namespace Dgraph.Transactions
                 options);
 
         // Dispose method - Must be ok to call multiple times!
-        public async Task<Result> Discard(CallOptions? options = null) {
-            if (TransactionState != TransactionState.OK) {
+        public async Task<Result> Discard(CallOptions? options = null)
+        {
+            if (TransactionState != TransactionState.OK)
+            {
                 // TransactionState.Committed can't be discarded
                 // TransactionState.Error only entered after Discard() is already called.
                 // TransactionState.Aborted multiple Discards have no effect
@@ -107,14 +117,16 @@ namespace Dgraph.Transactions
 
             TransactionState = TransactionState.Aborted;
 
-            if (!HasMutated) {
+            if (!HasMutated)
+            {
                 return Results.Ok();
             }
 
             Context.Aborted = true;
 
             return await Client.DgraphExecute(
-                async (dg) => { 
+                async (dg) =>
+                {
                     await dg.CommitOrAbortAsync(
                         Context,
                         options ?? new CallOptions(null, null, default(CancellationToken)));
@@ -124,21 +136,25 @@ namespace Dgraph.Transactions
             );
         }
 
-        public async Task<Result> Commit(CallOptions? options = null) {
+        public async Task<Result> Commit(CallOptions? options = null)
+        {
             AssertNotDisposed();
 
-            if (TransactionState != TransactionState.OK) {
+            if (TransactionState != TransactionState.OK)
+            {
                 return Results.Fail(new TransactionNotOK(TransactionState.ToString()));
             }
 
             TransactionState = TransactionState.Committed;
 
-            if (!HasMutated) {
+            if (!HasMutated)
+            {
                 return Results.Ok();
             }
 
             return await Client.DgraphExecute(
-                async (dg) => { 
+                async (dg) =>
+                {
                     await dg.CommitOrAbortAsync(
                         Context,
                         options ?? new CallOptions(null, null, default(CancellationToken)));
@@ -157,15 +173,19 @@ namespace Dgraph.Transactions
 
         private bool Disposed;
 
-        protected override void AssertNotDisposed() {
-            if (Disposed) {
+        protected override void AssertNotDisposed()
+        {
+            if (Disposed)
+            {
                 throw new ObjectDisposedException(GetType().Name);
             }
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
 
-            if (!Disposed && TransactionState == TransactionState.OK) {
+            if (!Disposed && TransactionState == TransactionState.OK)
+            {
                 Disposed = true;
 
                 // This makes Discard run async (maybe another thread)  So the current thread 

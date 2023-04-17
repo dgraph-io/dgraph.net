@@ -9,7 +9,8 @@ namespace Dgraph.tests.e2e.Errors
 
         public DgraphDotNetTestFailure(string message) : base(message) { }
 
-        public DgraphDotNetTestFailure(string message, ResultBase failureReason) : base(message) { 
+        public DgraphDotNetTestFailure(string message, ResultBase failureReason) : base(message)
+        {
             FailureReason = failureReason;
         }
     }

@@ -8,9 +8,11 @@ using NSubstitute;
 
 namespace Dgraph.tests.Transactions
 {
-    public class TransactionFixtureBase {
+    public class TransactionFixtureBase
+    {
 
-        internal (IDgraphClientInternal, Response) MinimalClient() {
+        internal (IDgraphClientInternal, Response) MinimalClient()
+        {
             var client = Substitute.For<IDgraphClientInternal>();
 
             var dgResp = new Api.Response();

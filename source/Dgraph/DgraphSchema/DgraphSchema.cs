@@ -13,22 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Dgraph.Schema {
+namespace Dgraph.Schema
+{
 
-    public class DgraphSchema {
+    public class DgraphSchema
+    {
 
         public List<DrgaphPredicate> Schema { get; set; }
 
         public List<DgraphType> Types { get; set; }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             var preds = string.Join("\n", Schema.Select(p => p.ToString()));
 
-            var types = string.Join("\n\n", 
+            var types = string.Join("\n\n",
                 Types?.Select(t => t.ToString()) ?? new List<string>());
 
             return preds + (types.Count() > 0 ? "\n" + types + "\n" : "\n");

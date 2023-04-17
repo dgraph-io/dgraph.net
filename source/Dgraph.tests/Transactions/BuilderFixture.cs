@@ -5,23 +5,28 @@ using NUnit.Framework;
 
 namespace Dgraph.tests.Transactions
 {
-    public class BuilderFixture {
+    public class BuilderFixture
+    {
 
         [TestCase(null, null, null)]
         [TestCase("query", null, null)]
         [TestCase(null, true, null)]
         [TestCase(null, null, true)]
         [TestCase("query", true, true)]
-        public void MutationRequestsAreNeverReadonly(string query, bool? commit, bool withMutation) {
+        public void MutationRequestsAreNeverReadonly(string query, bool? commit, bool withMutation)
+        {
             var builder = new RequestBuilder();
-            
-            if(query != null) {
+
+            if (query != null)
+            {
                 builder.Query = query;
             }
-            if(commit != null) {
+            if (commit != null)
+            {
                 builder.CommitNow = commit.Value;
             }
-            if(withMutation) {
+            if (withMutation)
+            {
                 builder.WithMutations(new MutationBuilder());
             }
 
@@ -36,18 +41,22 @@ namespace Dgraph.tests.Transactions
         [TestCase(null, true, null)]
         [TestCase(null, null, true)]
         [TestCase("query", true, true)]
-        public void MutationRequestsPreservesArgs(string query, bool? commit, bool withMutation) {
+        public void MutationRequestsPreservesArgs(string query, bool? commit, bool withMutation)
+        {
             var builder = new RequestBuilder();
-            
-            if(query != null) {
+
+            if (query != null)
+            {
                 builder.Query = query;
             }
-            if(commit != null) {
+            if (commit != null)
+            {
                 builder.CommitNow = commit.Value;
             }
 
-            var mb = new MutationBuilder() { SetJson = "json"};
-            if(withMutation) {
+            var mb = new MutationBuilder() { SetJson = "json" };
+            if (withMutation)
+            {
                 builder.WithMutations(mb);
             }
 
@@ -55,11 +64,14 @@ namespace Dgraph.tests.Transactions
 
             req.Query.Should().Be(query ?? "");
             req.CommitNow.Should().Be(commit ?? false);
-        
-            if(withMutation) {
+
+            if (withMutation)
+            {
                 req.Mutations.Count.Should().Be(1);
                 req.Mutations[0].Should().Be(mb.Mutation);
-            } else {
+            }
+            else
+            {
                 req.Mutations.Count.Should().Be(0);
             }
         }
@@ -72,23 +84,26 @@ namespace Dgraph.tests.Transactions
         [TestCase(null, null, null, null, "cond")]
         [TestCase("set json", "set nq", "del json", "del nq", "cond")]
         public void MutationBuilderPreservesArgs(
-            string setJson, 
+            string setJson,
             string setNQ,
             string deleteJson,
             string deleteNQ,
             string cond
-        ) {
+        )
+        {
 
-            var mb = new MutationBuilder {
+            var mb = new MutationBuilder
+            {
                 SetJson = setJson,
                 SetNquads = setNQ,
                 DeleteJson = deleteJson,
                 DelNquads = deleteNQ,
-                Cond = cond                
+                Cond = cond
             };
 
             mb.Mutation.Should().Be(
-                new Api.Mutation {
+                new Api.Mutation
+                {
                     SetJson = ByteString.CopyFromUtf8(setJson ?? ""),
                     SetNquads = ByteString.CopyFromUtf8(setNQ ?? ""),
                     DeleteJson = ByteString.CopyFromUtf8(deleteJson ?? ""),

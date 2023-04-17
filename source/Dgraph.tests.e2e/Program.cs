@@ -16,7 +16,8 @@ namespace Dgraph.tests.e2e
 
     [Command(Name = "Dgraph.net E2E test runner")]
     [HelpOption("--help")]
-    class Program {
+    class Program
+    {
 
         [Option(ShortName = "t", Description = "Set the tests to actually run.  Can be set multiple times.  Not setting == run all tests.")]
         public List<string> Test { get; } = new List<string>();
@@ -24,11 +25,13 @@ namespace Dgraph.tests.e2e
         [Option(ShortName = "i", Description = "Turn on interactive mode when not running in build server.")]
         public bool Interactive { get; }
 
-        public static int Main(string[] args) {
-            try {
+        public static int Main(string[] args)
+        {
+            try
+            {
                 var config = new ConfigurationBuilder()
                     .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json", optional : false, reloadOnChange : false)
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
                     .AddEnvironmentVariables("DGNETE2E_")
                     .Build();
 
@@ -44,7 +47,8 @@ namespace Dgraph.tests.e2e
                 Type baseTestType = typeof(DgraphDotNetE2ETest);
                 var assembly = typeof(DgraphDotNetE2ETest).Assembly;
                 IEnumerable<Type> testTypes = assembly.GetTypes().Where(t => t.IsSubclassOf(baseTestType));
-                foreach (var testType in testTypes) {
+                foreach (var testType in testTypes)
+                {
                     services.AddTransient(testType);
                 }
 
@@ -62,9 +66,13 @@ namespace Dgraph.tests.e2e
                 app.Execute(args);
                 return 0;
 
-            } catch (AggregateException aggEx) {
-                foreach (var ex in aggEx.InnerExceptions) {
-                    switch (ex) {
+            }
+            catch (AggregateException aggEx)
+            {
+                foreach (var ex in aggEx.InnerExceptions)
+                {
+                    switch (ex)
+                    {
                         case DgraphDotNetTestFailure testEx:
                             Log.Error("Test Failed with reason {@Reason}", testEx.FailureReason);
                             Log.Error(testEx, "Call Stack");
@@ -74,15 +82,20 @@ namespace Dgraph.tests.e2e
                             break;
                     }
                 }
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 Log.Error(ex, "Test run failed.");
-            } finally {
+            }
+            finally
+            {
                 Log.CloseAndFlush();
             }
             return 1;
         }
 
-        public Program(IServiceProvider serviceProvider, TestFinder testFinder, TestExecutor testExecutor) {
+        public Program(IServiceProvider serviceProvider, TestFinder testFinder, TestExecutor testExecutor)
+        {
             ServiceProvider = serviceProvider;
             TestFinder = testFinder;
             TestExecutor = testExecutor;
@@ -92,7 +105,8 @@ namespace Dgraph.tests.e2e
         private TestFinder TestFinder;
         private TestExecutor TestExecutor;
 
-        private async Task OnExecuteAsync(CommandLineApplication app) {
+        private async Task OnExecuteAsync(CommandLineApplication app)
+        {
 
             EnsureAllTestsRegistered();
 
@@ -102,7 +116,7 @@ namespace Dgraph.tests.e2e
 
             // Exceptions shouldn't escape this in normal circumstances.
             var executor = await Execute(tests);
-            
+
             var totalRan = executor.TestsRun;
             var totalFailed = executor.TestsFailed;
             var exceptionList = executor.Exceptions;
@@ -114,13 +128,16 @@ namespace Dgraph.tests.e2e
             Log.Information($"Tests Failed: {totalFailed}");
             Log.Information("-----------------------------------------");
 
-            if (totalFailed > 0) {
+            if (totalFailed > 0)
+            {
                 throw new AggregateException(exceptionList);
             }
         }
 
-        private async Task<TestExecutor> Execute(IEnumerable<string> tests) {
-            using(ServiceProvider.CreateScope()) {
+        private async Task<TestExecutor> Execute(IEnumerable<string> tests)
+        {
+            using (ServiceProvider.CreateScope())
+            {
                 TestExecutor exec = ServiceProvider.GetService<TestExecutor>();
                 await exec.ExecuteAll(tests);
                 return exec;

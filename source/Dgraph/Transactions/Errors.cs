@@ -16,14 +16,17 @@
 
 using FluentResults;
 
-namespace Dgraph.Transactions {
+namespace Dgraph.Transactions
+{
 
-    public class TransactionNotOK : Error {
-        internal TransactionNotOK(string state) 
+    public class TransactionNotOK : Error
+    {
+        internal TransactionNotOK(string state)
             : base("Cannot perform action when transaction is in state " + state) { }
     }
 
-    public class StartTsMismatch : Error {
+    public class StartTsMismatch : Error
+    {
         internal StartTsMismatch() : base("StartTs mismatch") { }
     }
 

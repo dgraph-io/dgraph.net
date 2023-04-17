@@ -18,15 +18,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Dgraph.Schema {
+namespace Dgraph.Schema
+{
 
-    public class DgraphType {
+    public class DgraphType
+    {
 
         public string Name { get; set; }
 
         public List<DgraphField> Fields { get; set; }
 
-        public override string ToString() => 
+        public override string ToString() =>
             "type " + Name + " {\n" +
             String.Join("\n", Fields.Select(f => "\t" + f.ToString())) + "\n" +
             "}";

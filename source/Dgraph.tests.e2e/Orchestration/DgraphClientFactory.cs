@@ -6,11 +6,13 @@ using Serilog;
 
 namespace Dgraph.tests.e2e.Orchestration
 {
-    public class DgraphClientFactory {
+    public class DgraphClientFactory
+    {
 
         private bool printed;
 
-        public async Task<IDgraphClient> GetDgraphClient() {
+        public async Task<IDgraphClient> GetDgraphClient()
+        {
 
             // FIXME: This is not what you'd want to do in a real app.  Normally, there
             // would be tls to the server.  TO ADD - tests of running over https, and
@@ -19,16 +21,20 @@ namespace Dgraph.tests.e2e.Orchestration
                 "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             var client = new DgraphClient(GrpcChannel.ForAddress("http://127.0.0.1:9080"));
 
-            if(!printed) {
+            if (!printed)
+            {
                 var result = await client.CheckVersion();
-                if (result.IsSuccess) {
+                if (result.IsSuccess)
+                {
                     Log.Information("Connected to Dgraph version {Version}", result.Value);
-                } else {
+                }
+                else
+                {
                     Log.Information("Failed to get Dgraph version {Error}", result);
                 }
                 printed = true;
             }
-            
+
             return client;
         }
 

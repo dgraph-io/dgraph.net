@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Grpc.Core;
 
-namespace Dgraph.Transactions {
+namespace Dgraph.Transactions
+{
 
     public enum TransactionState { OK, Committed, Aborted, Error }
 
@@ -31,7 +32,8 @@ namespace Dgraph.Transactions {
     /// var resp = ro.Query(...)
     /// </code>
     /// </summary>
-    public interface IQuery {
+    public interface IQuery
+    {
 
         TransactionState TransactionState { get; }
 
@@ -39,7 +41,7 @@ namespace Dgraph.Transactions {
         /// Run a query.
         /// </summary>
         Task<FluentResults.Result<Response>> Query(
-            string queryString, 
+            string queryString,
             CallOptions? options = null
         );
 
@@ -47,11 +49,11 @@ namespace Dgraph.Transactions {
         /// Run a query with variables.
         /// </summary>
         Task<FluentResults.Result<Response>> QueryWithVars(
-            string queryString, 
+            string queryString,
             Dictionary<string, string> varMap,
             CallOptions? options = null
         );
 
     }
-    
+
 }

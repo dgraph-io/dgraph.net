@@ -17,7 +17,8 @@
 namespace Dgraph.Schema
 {
 
-    public class DgraphField {
+    public class DgraphField
+    {
 
         public string Name { get; set; }
 

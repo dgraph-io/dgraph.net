@@ -29,7 +29,8 @@ namespace Dgraph
     /// </summary>
     /// <exception cref="System.ObjectDisposedException">Thrown if the client
     /// has been disposed and calls are made.</exception>
-    public interface IDgraphClient : IDisposable {
+    public interface IDgraphClient : IDisposable
+    {
 
         /// <summary>
         /// Alter the Dgraph database (alter schema, drop everything, etc.).

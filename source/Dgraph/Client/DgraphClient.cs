@@ -29,15 +29,19 @@ using System.Threading.Tasks;
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Dgraph.tests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicProxyGenAssembly2")] // for NSubstitute
 
-namespace Dgraph {
+namespace Dgraph
+{
 
-    public class DgraphClient : IDgraphClient, IDgraphClientInternal {
+    public class DgraphClient : IDgraphClient, IDgraphClientInternal
+    {
 
-        private readonly List<Api.Dgraph.DgraphClient> dgraphs = 
+        private readonly List<Api.Dgraph.DgraphClient> dgraphs =
             new List<Api.Dgraph.DgraphClient>();
 
-        public DgraphClient(params GrpcChannel[] channels) {
-            foreach (var chan in channels) {
+        public DgraphClient(params GrpcChannel[] channels)
+        {
+            foreach (var chan in channels)
+            {
                 Api.Dgraph.DgraphClient client = new Api.Dgraph.DgraphClient(chan);
                 dgraphs.Add(client);
             }
@@ -50,13 +54,15 @@ namespace Dgraph {
         //
         #region transactions
 
-        public ITransaction NewTransaction() {
+        public ITransaction NewTransaction()
+        {
             AssertNotDisposed();
 
             return new Transaction(this);
         }
 
-        public IQuery NewReadOnlyTransaction(Boolean bestEffort = false) {
+        public IQuery NewReadOnlyTransaction(Boolean bestEffort = false)
+        {
             AssertNotDisposed();
 
             return new ReadOnlyTransaction(this, bestEffort);
@@ -72,15 +78,18 @@ namespace Dgraph {
         #region execution
 
         private int NextConnection = 0;
-        private int GetNextConnection() {
-			var next = NextConnection;
-			NextConnection = (next  + 1) % dgraphs.Count;
+        private int GetNextConnection()
+        {
+            var next = NextConnection;
+            NextConnection = (next + 1) % dgraphs.Count;
             return next;
-        }			
+        }
 
-        public async Task<FluentResults.Result> Alter(Api.Operation op, CallOptions? options = null) {
+        public async Task<FluentResults.Result> Alter(Api.Operation op, CallOptions? options = null)
+        {
             return await DgraphExecute(
-                async (dg) => {
+                async (dg) =>
+                {
                     await dg.AlterAsync(op, options ?? new CallOptions());
                     return Results.Ok();
                 },
@@ -88,19 +97,23 @@ namespace Dgraph {
             );
         }
 
-        public async Task<FluentResults.Result<string>> CheckVersion(CallOptions? options = null) {
+        public async Task<FluentResults.Result<string>> CheckVersion(CallOptions? options = null)
+        {
             return await DgraphExecute(
-                async (dg) => {
-                    var versionResult = await dg.CheckVersionAsync(new Check(), options?? new CallOptions());
-                    return Results.Ok<string>(versionResult.Tag);;
+                async (dg) =>
+                {
+                    var versionResult = await dg.CheckVersionAsync(new Check(), options ?? new CallOptions());
+                    return Results.Ok<string>(versionResult.Tag); ;
                 },
                 (rpcEx) => Results.Fail<string>(new FluentResults.ExceptionalError(rpcEx))
             );
         }
 
-        public async Task<FluentResults.Result> Login(Api.LoginRequest lr, CallOptions? options = null) {
+        public async Task<FluentResults.Result> Login(Api.LoginRequest lr, CallOptions? options = null)
+        {
             return await DgraphExecute(
-                async (dg) => {
+                async (dg) =>
+                {
                     await dg.LoginAsync(lr, options ?? new CallOptions());
                     return Results.Ok();
                 },
@@ -109,15 +122,19 @@ namespace Dgraph {
         }
 
         public async Task<T> DgraphExecute<T>(
-            Func<Api.Dgraph.DgraphClient, Task<T>> execute, 
+            Func<Api.Dgraph.DgraphClient, Task<T>> execute,
             Func<RpcException, T> onFail
-        ) {
+        )
+        {
 
             AssertNotDisposed();
 
-            try {
+            try
+            {
                 return await execute(dgraphs[GetNextConnection()]);
-            } catch (RpcException rpcEx) {
+            }
+            catch (RpcException rpcEx)
+            {
                 return onFail(rpcEx);
             }
         }
@@ -145,20 +162,26 @@ namespace Dgraph {
         bool disposed; // = false;
         protected bool Disposed => disposed;
 
-        protected void AssertNotDisposed() {
-            if (Disposed) {
+        protected void AssertNotDisposed()
+        {
+            if (Disposed)
+            {
                 throw new ObjectDisposedException(GetType().Name);
             }
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             DisposeIDisposables();
         }
 
-        protected virtual void DisposeIDisposables() {
-            if (!Disposed) {
-                this.disposed = true;  
-                foreach (var dgraph in dgraphs) {
+        protected virtual void DisposeIDisposables()
+        {
+            if (!Disposed)
+            {
+                this.disposed = true;
+                foreach (var dgraph in dgraphs)
+                {
                     // FIXME:
                     // can't get to the chans??
                     // dgraph. Dispose();
