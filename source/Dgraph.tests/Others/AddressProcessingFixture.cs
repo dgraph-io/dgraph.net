@@ -12,7 +12,7 @@ namespace Dgraph.tests.Others
         {
             var testData = new Dictionary<string, string>
             {
-                {"https://invalid-example.com/graphql", "https://example.grpc.us-east-1.aws.cloud.dgraph.io"},
+                {"https://example.us-east-1.aws.cloud.dgraph.io/graphql", "https://example.grpc.us-east-1.aws.cloud.dgraph.io"},
                 {"http://example.us-east-1.aws.cloud.dgraph.io/graphql", "https://example.grpc.us-east-1.aws.cloud.dgraph.io"},
                 {"example.us-east-1.aws.cloud.dgraph.io/graphql", "https://example.grpc.us-east-1.aws.cloud.dgraph.io"},
                 {"example.grpc.us-east-1.aws.cloud.dgraph.io", "https://example.grpc.us-east-1.aws.cloud.dgraph.io"},
