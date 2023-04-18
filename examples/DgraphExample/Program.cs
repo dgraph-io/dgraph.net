@@ -9,19 +9,23 @@ namespace DgraphExample
             // Connect to Dgraph Cloud.
             var cloudUrl = "https://green-bird.grpc.us-east-1.aws.cloud.dgraph.io/graphql";
             var APIKEY = "xxx=";
-            var client = new DgraphClient(SlashChannel.Create(cloudUrl, APIKEY));
+            using var client = new DgraphClient(DgraphCloudChannel.Create(cloudUrl, APIKEY));
 
             var version = await client.CheckVersion();
 
-            Console.WriteLine("Version: " + version.Value);
+            if (version.IsSuccess)
+            {
+                Console.WriteLine("Version: " + version.Value);
+            }
 
-            // Perform a query.
             string query = @"schema{}";
 
-            var readOnlyTransaction = client.NewTransaction();
-            var response = await readOnlyTransaction.Query(query);
-            Console.WriteLine("Query response: " + response.Value.Json);
+            string result = await ExecuteDQL.Query(client, query);
+
+            // Print the result
+            Console.WriteLine(result);
 
         }
+
     }
 }
