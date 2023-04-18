@@ -16,6 +16,8 @@
 
 using Grpc.Core;
 using Grpc.Net.Client;
+using System;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Dgraph
@@ -24,6 +26,8 @@ namespace Dgraph
     {
         public static GrpcChannel Create(string address, string apiKey)
         {
+            address = ProcessAddress(address);
+
             var credentials = CallCredentials.FromInterceptor((context, metadata) =>
             {
                 if (!string.IsNullOrEmpty(apiKey))
@@ -41,5 +45,39 @@ namespace Dgraph
             });
             return channel;
         }
+
+        private static string ProcessAddress(string address)
+        {
+            if (!address.Contains("cloud.dgraph.io"))
+            {
+                throw new ArgumentException("The provided address is not valid for Dgraph Cloud. Check your Cloud gRPC Endpoint.");
+            }
+            if (address.StartsWith("http://") || address.StartsWith("https://"))
+            {
+                address = new Uri(address).Host;
+            }
+
+            var match = Regex.Match(address, @"^(?<name>[\w-]+)\.(?<region>[\w-]+)\.aws\.cloud\.dgraph\.io");
+
+            if (match.Success)
+            {
+                string name = match.Groups["name"].Value;
+                string region = match.Groups["region"].Value;
+
+                address = $"{name}.grpc.{region}.aws.cloud.dgraph.io";
+            }
+
+            if (!address.StartsWith("https://"))
+            {
+                address = $"https://{address}";
+            }
+
+            return address;
+        }
+        public static string ProcessAddressForTest(string address)
+        {
+            return ProcessAddress(address);
+        }
     }
+
 }

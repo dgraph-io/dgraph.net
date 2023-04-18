@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(SolutionDir)\LICENSE.txt" Pack="true" PackagePath="$(PackageLicenseFile)"/>
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="$(PackageLicenseFile)"/>
     <Protobuf Include="github.com/dgraph-io/dgraph/protos/pb.proto" />
     <Protobuf Include="github.com/dgraph-io/dgo/protos/api.proto" />
     <Protobuf Include="github.com/dgraph-io/badger/pb/badger.proto" />
