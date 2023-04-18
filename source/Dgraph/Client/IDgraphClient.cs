@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Dgraph Labs, Inc. and Contributors
+ * Copyright 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ namespace Dgraph
     /// </summary>
     /// <exception cref="System.ObjectDisposedException">Thrown if the client
     /// has been disposed and calls are made.</exception>
-    public interface IDgraphClient : IDisposable {
+    public interface IDgraphClient : IDisposable
+    {
 
         /// <summary>
         /// Alter the Dgraph database (alter schema, drop everything, etc.).

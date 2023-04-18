@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Dgraph Labs, Inc. and Contributors
+ * Copyright 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,51 +20,67 @@ using Google.Protobuf;
 namespace Dgraph.Transactions
 {
 
-    public class MutationBuilder {
+    public class MutationBuilder
+    {
 
         internal Mutation Mutation = new Mutation();
-        
-        public string SetJson {
-            get {
+
+        public string SetJson
+        {
+            get
+            {
                 return Mutation.SetJson.ToStringUtf8();
             }
-            set {
+            set
+            {
                 Mutation.SetJson = ByteString.CopyFromUtf8(value ?? "");
             }
         }
-        public string SetNquads {
-            get {
+        public string SetNquads
+        {
+            get
+            {
                 return Mutation.SetNquads.ToStringUtf8();
             }
-            set {
+            set
+            {
                 Mutation.SetNquads = ByteString.CopyFromUtf8(value ?? "");
-            }            
+            }
         }
-        public string DeleteJson {
-            get {
+        public string DeleteJson
+        {
+            get
+            {
                 return Mutation.DeleteJson.ToStringUtf8();
             }
-            set {
+            set
+            {
                 Mutation.DeleteJson = ByteString.CopyFromUtf8(value ?? "");
-            }               
+            }
         }
 
-        public string DelNquads {
-            get {
+        public string DelNquads
+        {
+            get
+            {
                 return Mutation.DelNquads.ToStringUtf8();
             }
-            set {
+            set
+            {
                 Mutation.DelNquads = ByteString.CopyFromUtf8(value ?? "");
-            }   
+            }
         }
 
-        public string Cond {
-            get {
+        public string Cond
+        {
+            get
+            {
                 return Mutation.Cond;
             }
-            set {
+            set
+            {
                 Mutation.Cond = value ?? "";
-            }  
+            }
         }
 
     }

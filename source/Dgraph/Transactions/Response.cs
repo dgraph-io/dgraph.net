@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Dgraph Labs, Inc. and Contributors
+ * Copyright 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,15 @@ using Api;
 namespace Dgraph.Transactions
 {
 
-    public class Response {
+    public class Response
+    {
 
         public readonly Api.Response DgraphResponse;
 
         private Lazy<Dictionary<string, string>> _Uids;
-        
-        internal Response(Api.Response dgraphResponse) {
+
+        internal Response(Api.Response dgraphResponse)
+        {
             DgraphResponse = dgraphResponse;
 
             _Uids = new Lazy<Dictionary<string, string>>(

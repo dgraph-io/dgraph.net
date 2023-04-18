@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023 Dgraph Labs, Inc. and Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -8,15 +24,18 @@ using Dgraph.tests.e2e.Orchestration;
 using FluentResults;
 using Microsoft.Extensions.FileProviders;
 
-namespace Dgraph.tests.e2e.Tests {
-    public abstract class DgraphDotNetE2ETest {
+namespace Dgraph.tests.e2e.Tests
+{
+    public abstract class DgraphDotNetE2ETest
+    {
         protected readonly DgraphClientFactory ClientFactory;
 
         protected readonly Assent.Configuration AssentConfiguration;
 
         private readonly IFileProvider EmbeddedProvider;
 
-        public DgraphDotNetE2ETest(DgraphClientFactory clientFactory) {
+        public DgraphDotNetE2ETest(DgraphClientFactory clientFactory)
+        {
             ClientFactory = clientFactory;
 
             AssentConfiguration = new Assent.Configuration()
@@ -28,11 +47,14 @@ namespace Dgraph.tests.e2e.Tests {
             EmbeddedProvider = new EmbeddedFileProvider(Assembly.GetAssembly(typeof(DgraphDotNetE2ETest)), "Dgraph.tests.e2e.Tests.Data");
         }
 
-        public async virtual Task Setup() {
-            using(var client = await ClientFactory.GetDgraphClient()) {
+        public async virtual Task Setup()
+        {
+            using (var client = await ClientFactory.GetDgraphClient())
+            {
                 var result = await client.Alter(
-                    new Api.Operation { DropAll = true }); 
-                if (result.IsFailed) {
+                    new Api.Operation { DropAll = true });
+                if (result.IsFailed)
+                {
                     throw new DgraphDotNetTestFailure("Failed to clean database in test setup", result);
                 }
             }
@@ -40,26 +62,34 @@ namespace Dgraph.tests.e2e.Tests {
 
         public abstract Task Test();
 
-        public async virtual Task TearDown() {
-            using(var client = await ClientFactory.GetDgraphClient()) {
+        public async virtual Task TearDown()
+        {
+            using (var client = await ClientFactory.GetDgraphClient())
+            {
                 var result = await client.Alter(
-                    new Api.Operation { DropAll = true }); 
-                if (result.IsFailed) {
+                    new Api.Operation { DropAll = true });
+                if (result.IsFailed)
+                {
                     throw new DgraphDotNetTestFailure("Failed to clean database in test setup", result);
                 }
             }
         }
 
-        protected string ReadEmbeddedFile(string filename) {
-            using(var stream = EmbeddedProvider.GetFileInfo(filename).CreateReadStream()) {
-                using(var reader = new StreamReader(stream, Encoding.UTF8)) {
+        protected string ReadEmbeddedFile(string filename)
+        {
+            using (var stream = EmbeddedProvider.GetFileInfo(filename).CreateReadStream())
+            {
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
                     return reader.ReadToEnd();
                 }
             }
         }
 
-        protected void AssertResultIsSuccess(ResultBase result, string msg = null) {
-            if(result.IsFailed) {
+        protected void AssertResultIsSuccess(ResultBase result, string msg = null)
+        {
+            if (result.IsFailed)
+            {
                 throw new DgraphDotNetTestFailure(msg ?? "Expected success result, but got failed", result);
             }
         }

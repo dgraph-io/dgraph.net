@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Dgraph Labs, Inc. and Contributors
+ * Copyright 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -39,7 +39,8 @@ namespace Dgraph.Transactions
 
         internal ReadOnlyTransaction(IDgraphClientInternal client, bool bestEffort) : this(client, true, bestEffort) { }
 
-        protected ReadOnlyTransaction(IDgraphClientInternal client, Boolean readOnly, Boolean bestEffort) {
+        protected ReadOnlyTransaction(IDgraphClientInternal client, Boolean readOnly, Boolean bestEffort)
+        {
             Client = client;
             ReadOnly = readOnly;
             BestEffort = bestEffort;
@@ -48,26 +49,30 @@ namespace Dgraph.Transactions
         }
 
         public async Task<FluentResults.Result<Response>> Query(
-            string queryString, 
+            string queryString,
             CallOptions? options = null
-        ) {
+        )
+        {
             return await QueryWithVars(queryString, new Dictionary<string, string>(), options);
         }
 
         public async Task<FluentResults.Result<Response>> QueryWithVars(
-            string queryString, 
+            string queryString,
             Dictionary<string, string> varMap,
             CallOptions? options = null
-        ) {
+        )
+        {
 
             AssertNotDisposed();
 
-            if (TransactionState != TransactionState.OK) {
+            if (TransactionState != TransactionState.OK)
+            {
                 return Results.Fail<Response>(
                     new TransactionNotOK(TransactionState.ToString()));
             }
 
-            try {
+            try
+            {
                 Api.Request request = new Api.Request();
                 request.Query = queryString;
                 request.Vars.Add(varMap);
@@ -77,43 +82,53 @@ namespace Dgraph.Transactions
                 request.BestEffort = BestEffort;
 
                 var response = await Client.DgraphExecute(
-                    async (dg) => 
+                    async (dg) =>
                         Results.Ok<Response>(
                             new Response(await dg.QueryAsync(
-                                request, 
+                                request,
                                 options ?? new CallOptions(null, null, default(CancellationToken)))
                         )),
-                    (rpcEx) => 
+                    (rpcEx) =>
                         Results.Fail<Response>(new FluentResults.ExceptionalError(rpcEx))
                 );
 
-                if(response.IsFailed) {
+                if (response.IsFailed)
+                {
                     return response;
                 }
 
                 var err = MergeContext(response.Value.DgraphResponse.Txn);
 
-                if (err.IsSuccess) {
+                if (err.IsSuccess)
+                {
                     return response;
-                } else {
+                }
+                else
+                {
                     return err.ToResult<Response>();
                 }
 
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 return Results.Fail<Response>(new FluentResults.ExceptionalError(ex));
             }
         }
 
-        protected FluentResults.Result MergeContext(TxnContext srcContext) {
-            if (srcContext == null) {
+        protected FluentResults.Result MergeContext(TxnContext srcContext)
+        {
+            if (srcContext == null)
+            {
                 return Results.Ok();
             }
 
-            if (Context.StartTs == 0) {
+            if (Context.StartTs == 0)
+            {
                 Context.StartTs = srcContext.StartTs;
             }
 
-            if (Context.StartTs != srcContext.StartTs) {
+            if (Context.StartTs != srcContext.StartTs)
+            {
                 return Results.Fail(new StartTsMismatch());
             }
 

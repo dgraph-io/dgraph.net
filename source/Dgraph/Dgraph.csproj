@@ -18,7 +18,7 @@
     <IncludeSymbols>True</IncludeSymbols>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageVersion>21.03.01.02</PackageVersion>
-    <PackageLicenseUrl>https://github.com/dgraph-io/dgraph.net/LICENSE.txt</PackageLicenseUrl>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="$(SolutionDir)\LICENSE.txt" Pack="true" PackagePath="$(PackageLicenseFile)"/>
     <Protobuf Include="github.com/dgraph-io/dgraph/protos/pb.proto" />
     <Protobuf Include="github.com/dgraph-io/dgo/protos/api.proto" />
     <Protobuf Include="github.com/dgraph-io/badger/pb/badger.proto" />

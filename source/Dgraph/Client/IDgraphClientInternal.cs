@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Dgraph Labs, Inc. and Contributors
+ * Copyright 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,9 @@ namespace Dgraph
     public interface IDgraphClientInternal {
 
         Task<T> DgraphExecute<T>(
-            Func<Api.Dgraph.DgraphClient, Task<T>> execute, 
+            Func<Api.Dgraph.DgraphClient, Task<T>> execute,
             Func<RpcException, T> onFail
         );
-        
+
     }
 }
