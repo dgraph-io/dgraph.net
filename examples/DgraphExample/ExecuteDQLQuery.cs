@@ -41,7 +41,7 @@ namespace DgraphExample
                 {
                     // Perform a mutation.
                     var mutation = new MutationBuilder { SetJson = json };
-                    var response = await transaction.MutateWithRetryAsync(new RequestBuilder().WithMutations(mutation));
+                    var response = await transaction.MutateWithRetry(new RequestBuilder().WithMutations(mutation));
                     await transaction.Commit();
 
                     if (response.IsFailed)
@@ -63,10 +63,6 @@ namespace DgraphExample
             }
         }
 
-
-
-
-
         public static async Task<string> QueryWithRetry(DgraphClient Client, string query)
         {
             using (RetryableTransaction transaction = Client.NewRetryableTransaction())
@@ -74,7 +70,7 @@ namespace DgraphExample
                 try
                 {
                     // Perform a query.
-                    var response = await transaction.QueryWithRetryAsync(query);
+                    var response = await transaction.QueryWithRetry(query);
                     await transaction.Commit();
 
                     if (response.IsFailed)

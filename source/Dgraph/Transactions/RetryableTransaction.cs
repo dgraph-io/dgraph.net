@@ -10,68 +10,106 @@ namespace Dgraph.Transactions
         {
         }
 
-        public async Task<FluentResults.Result<Response>> MutateWithRetryAsync(RequestBuilder mu)
+        public async Task<FluentResults.Result<Response>> MutateWithRetry(RequestBuilder mu)
         {
-            TimeSpan initialDelay = TimeSpan.FromMilliseconds(100);
-            int maxRetries = 5;
+            TimeSpan initialDelay = TimeSpan.FromMilliseconds(200);
+            int maxRetries = 50;
             TimeSpan delay = initialDelay;
             int retries = 0;
 
+            FluentResults.Result<Response> response = null;
+
             while (retries <= maxRetries)
             {
-                try
+                response = await base.Mutate(mu);
+                Console.WriteLine($"response : {response}");
+
+                if (response.IsFailed)
                 {
-                    return await base.Mutate(mu);
-                }
-                catch (RpcException ex) when (ex.StatusCode == StatusCode.Aborted || ex.StatusCode == StatusCode.Unavailable)
-                {
+                    string errorMessage = response.Errors[0].Message;
+
                     if (retries == maxRetries)
                     {
-                        throw;
+                        throw new InvalidOperationException($"Mutation failed: {errorMessage}");
                     }
-                    await Task.Delay(delay);
-                    delay *= 2;
-                    retries++;
-                }
-            }
 
-            throw new InvalidOperationException("Should not reach this point.");
-        }
-        public async Task<FluentResults.Result<Response>> QueryWithRetryAsync(string query)
-        {
-            TimeSpan initialDelay = TimeSpan.FromMilliseconds(100);
-            int maxRetries = 5;
-            TimeSpan delay = initialDelay;
-            int retries = 0;
-
-            while (retries <= maxRetries)
-            {
-                try
-                {
-                    await base.Query(query);
-                }
-                catch (Exception ex)
-                {
-                    if (ex is RpcException rpcEx && (rpcEx.StatusCode == StatusCode.Aborted || rpcEx.StatusCode == StatusCode.Unavailable || rpcEx.StatusCode == StatusCode.Unauthenticated))
+                    if (errorMessage.Contains("Unauthenticated"))
                     {
-                        if (retries == maxRetries)
-                        {
-                            throw;
-                        }
-                        await Task.Delay(delay);
-                        delay *= 2;
-                        retries++;
+                        maxRetries = 5;
+                        delay *= 3;
+                    }
+                    else if (errorMessage.Contains("Aborted") || errorMessage.Contains("Unavailable"))
+                    {
+                        maxRetries = 50;
+                        delay *= 3;
                     }
                     else
                     {
-                        Console.WriteLine($"gRPC Error: {ex}");
-                        throw;
+                        maxRetries = 80;
+                        delay *= 3;
                     }
+
+                    await Task.Delay(delay);
+                    retries++;
+                }
+                else
+                {
+                    return response;
                 }
             }
 
             throw new InvalidOperationException("Should not reach this point.");
         }
 
+        public async Task<FluentResults.Result<Response>> QueryWithRetry(string query)
+        {
+            TimeSpan initialDelay = TimeSpan.FromMilliseconds(200);
+            int maxRetries = 50;
+            TimeSpan delay = initialDelay;
+            int retries = 0;
+
+            FluentResults.Result<Response> response = null;
+
+            while (retries <= maxRetries)
+            {
+                response = await base.Query(query);
+                Console.WriteLine($"response : {response}");
+
+                if (response.IsFailed)
+                {
+                    string errorMessage = response.Errors[0].Message;
+
+                    if (retries == maxRetries)
+                    {
+                        throw new InvalidOperationException($"Query failed: {errorMessage}");
+                    }
+
+                    if (errorMessage.Contains("Unauthenticated"))
+                    {
+                        maxRetries = 5;
+                        delay *= 3;
+                    }
+                    else if (errorMessage.Contains("Aborted") || errorMessage.Contains("Unavailable"))
+                    {
+                        maxRetries = 50;
+                        delay *= 3;
+                    }
+                    else
+                    {
+                        maxRetries = 80;
+                        delay *= 3;
+                    }
+
+                    await Task.Delay(delay);
+                    retries++;
+                }
+                else
+                {
+                    return response;
+                }
+            }
+
+            throw new InvalidOperationException("Should not reach this point.");
+        }
     }
 }
