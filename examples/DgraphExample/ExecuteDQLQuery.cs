@@ -33,14 +33,48 @@ namespace DgraphExample
                 }
             }
         }
-                public static async Task<string> QueryWithRetry(DgraphClient Client, string query)
+        public static async Task<string> MutateWithRetry(DgraphClient Client, string json)
         {
-            using (ITransaction transaction = Client.NewRetryableTransaction())
+            using (RetryableTransaction transaction = Client.NewRetryableTransaction())
+            {
+                try
+                {
+                    // Perform a mutation.
+                    var mutation = new MutationBuilder { SetJson = json };
+                    var response = await transaction.MutateWithRetryAsync(new RequestBuilder().WithMutations(mutation));
+                    await transaction.Commit();
+
+                    if (response.IsFailed)
+                    {
+                        Console.WriteLine($"[{DateTime.Now}] gRPC response failed: {response.Errors[0].Message}");
+                        return "gRPC Got error";
+                    }
+                    else
+                    {
+                        return response.Value.Json;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[{DateTime.Now}] An error occurred during the mutation: {ex.Message}");
+                    await transaction.Discard();
+                    return "gRPC Error during transaction";
+                }
+            }
+        }
+
+
+
+
+
+        public static async Task<string> QueryWithRetry(DgraphClient Client, string query)
+        {
+            using (RetryableTransaction transaction = Client.NewRetryableTransaction())
             {
                 try
                 {
                     // Perform a query.
-                    var response = await transaction.Query(query);
+                    var response = await transaction.QueryWithRetryAsync(query);
                     await transaction.Commit();
 
                     if (response.IsFailed)

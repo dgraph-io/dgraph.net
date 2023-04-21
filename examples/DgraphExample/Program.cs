@@ -20,7 +20,7 @@ namespace DgraphExample
 
             string query = @"schema{}";
 
-            string result = await ExecuteDQL.Query(client, query);
+            string result = await ExecuteDQL.QueryWithRetry(client, query);
 
             // Print the result
             Console.WriteLine(result);
