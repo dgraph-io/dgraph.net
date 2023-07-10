@@ -29,6 +29,11 @@ namespace Dgraph.Transactions
         internal TransactionReadOnly() : base("Readonly transaction cannot run mutations or be committed") { }
     }
 
+    public class TransactionMalformed : Error
+    {
+        internal TransactionMalformed(string message) : base(message) { }
+    }
+
     public class StartTsMismatch : Error
     {
         internal StartTsMismatch() : base("StartTs mismatch") { }

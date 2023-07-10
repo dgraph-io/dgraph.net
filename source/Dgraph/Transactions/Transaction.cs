@@ -101,6 +101,16 @@ namespace Dgraph.Transactions
                 {
                     return Result.Fail<Response>(new TransactionReadOnly());
                 }
+
+                if (request.Mutations.All(r => r.CommitNow))
+                {
+                    request.CommitNow = true;
+                }
+                else if (request.Mutations.Any(r => r.CommitNow))
+                {
+                    return Result.Fail<Response>(new TransactionMalformed("CommitNow on all transaction mutations must be all true or all false."));
+                }
+
                 HasMutated = true;
             }
 
