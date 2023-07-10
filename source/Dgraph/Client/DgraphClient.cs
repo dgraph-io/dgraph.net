@@ -14,67 +14,96 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using Api;
+using Dgraph.Api;
 using Dgraph.Transactions;
 using FluentResults;
 using Grpc.Core;
 using Grpc.Net.Client;
-using System.Threading.Tasks;
 
 // For unit testing.  Allows to make mocks of the internal interfaces and factories
 // so can test in isolation from a Dgraph instance.
-//
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Dgraph.tests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicProxyGenAssembly2")] // for NSubstitute
 
 namespace Dgraph
 {
-
     public class DgraphClient : IDgraphClient, IDgraphClientInternal
     {
-
-        private readonly List<Api.Dgraph.DgraphClient> dgraphs =
-            new List<Api.Dgraph.DgraphClient>();
-
-        public DgraphClient(params GrpcChannel[] channels)
+        public static IDgraphClient Create(params GrpcChannel[] channels)
         {
+            return new DgraphClient(channels);
+        }
+
+        private readonly List<Api.Dgraph.DgraphClient> dgraphs;
+        private readonly GrpcChannel[] channels;
+
+        private DgraphClient(params GrpcChannel[] channels)
+        {
+            this.channels = channels;
+            this.dgraphs = new List<Api.Dgraph.DgraphClient>();
             foreach (var chan in channels)
             {
-                Api.Dgraph.DgraphClient client = new Api.Dgraph.DgraphClient(chan);
-                dgraphs.Add(client);
+                this.dgraphs.Add(new Api.Dgraph.DgraphClient(chan));
             }
         }
 
-        // 
-        // ------------------------------------------------------
-        //              Transactions
-        // ------------------------------------------------------
-        //
-        #region transactions
+        #region IDgraphClient 
 
-        public ITransaction NewTransaction()
+        Task<Result> IDgraphClient.LoginIntoNamespace(string user, string password, ulong ns, CallOptions? options)
         {
-            AssertNotDisposed();
-
-            return new Transaction(this);
+            return DgraphExecute(
+                async (dg) =>
+                {
+                    await dg.LoginAsync(new LoginRequest
+                    {
+                        Userid = user,
+                        Password = password,
+                        Namespace = ns
+                    }, options ?? new CallOptions());
+                    return Result.Ok();
+                },
+                (rpcEx) => Result.Fail(new ExceptionalError(rpcEx))
+            );
         }
 
-        public IQuery NewReadOnlyTransaction(Boolean bestEffort = false)
+        Task<Result> IDgraphClient.Alter(Api.Operation op, CallOptions? options)
+        {
+            return DgraphExecute(
+                async (dg) =>
+                {
+                    await dg.AlterAsync(op, options ?? new CallOptions());
+                    return Result.Ok();
+                },
+                (rpcEx) => Result.Fail(new ExceptionalError(rpcEx))
+            );
+        }
+
+        Task<Result<string>> IDgraphClient.CheckVersion(CallOptions? options)
+        {
+            return DgraphExecute(
+                async (dg) =>
+                {
+                    var versionResult = await dg.CheckVersionAsync(new Check(), options ?? new CallOptions());
+                    return Result.Ok<string>(versionResult.Tag); ;
+                },
+                (rpcEx) => Result.Fail<string>(new ExceptionalError(rpcEx))
+            );
+        }
+
+        ITransaction IDgraphClient.NewTransaction()
         {
             AssertNotDisposed();
+            return new Transaction(client: this);
+        }
 
-            return new ReadOnlyTransaction(this, bestEffort);
+        IQuery IDgraphClient.NewReadOnlyTransaction(bool bestEffort)
+        {
+            AssertNotDisposed();
+            return new Transaction(client: this, readOnly: true, bestEffort: bestEffort);
         }
 
         #endregion
 
-        // 
-        // ------------------------------------------------------
-        //              Execution
-        // ------------------------------------------------------
-        //
         #region execution
 
         private int NextConnection = 0;
@@ -85,48 +114,11 @@ namespace Dgraph
             return next;
         }
 
-        public async Task<FluentResults.Result> Alter(Api.Operation op, CallOptions? options = null)
-        {
-            return await DgraphExecute(
-                async (dg) =>
-                {
-                    await dg.AlterAsync(op, options ?? new CallOptions());
-                    return Results.Ok();
-                },
-                (rpcEx) => Results.Fail(new FluentResults.ExceptionalError(rpcEx))
-            );
-        }
-
-        public async Task<FluentResults.Result<string>> CheckVersion(CallOptions? options = null)
-        {
-            return await DgraphExecute(
-                async (dg) =>
-                {
-                    var versionResult = await dg.CheckVersionAsync(new Check(), options ?? new CallOptions());
-                    return Results.Ok<string>(versionResult.Tag); ;
-                },
-                (rpcEx) => Results.Fail<string>(new FluentResults.ExceptionalError(rpcEx))
-            );
-        }
-
-        public async Task<FluentResults.Result> Login(Api.LoginRequest lr, CallOptions? options = null)
-        {
-            return await DgraphExecute(
-                async (dg) =>
-                {
-                    await dg.LoginAsync(lr, options ?? new CallOptions());
-                    return Results.Ok();
-                },
-                (rpcEx) => Results.Fail(new FluentResults.ExceptionalError(rpcEx))
-            );
-        }
-
         public async Task<T> DgraphExecute<T>(
             Func<Api.Dgraph.DgraphClient, Task<T>> execute,
             Func<RpcException, T> onFail
         )
         {
-
             AssertNotDisposed();
 
             try
@@ -141,26 +133,9 @@ namespace Dgraph
 
         #endregion
 
-        // 
-        // ------------------------------------------------------
-        //              Disposable Pattern
-        // ------------------------------------------------------
-        //
-        #region disposable pattern
+        #region IDisposable
 
-        // see disposable pattern at : https://docs.microsoft.com/en-us/dotnet/standard/design-guidelines/dispose-pattern
-        // and http://reedcopsey.com/tag/idisposable/
-        //
-        // Trying to follow the rules here 
-        // https://blog.stephencleary.com/2009/08/second-rule-of-implementing-idisposable.html
-        // for all the dgraph dispose bits
-        //
-        // For this class, it has only managed IDisposable resources, so it just needs to call the Dispose()
-        // of those resources.  It's safe to have nothing else, because IDisposable.Dispose() must be safe to call
-        // multiple times.  Also don't need a finalizer.  So this simplifies the general pattern, which isn't needed here.
-
-        bool disposed; // = false;
-        protected bool Disposed => disposed;
+        private bool Disposed = false;
 
         protected void AssertNotDisposed()
         {
@@ -179,12 +154,10 @@ namespace Dgraph
         {
             if (!Disposed)
             {
-                this.disposed = true;
-                foreach (var dgraph in dgraphs)
+                this.Disposed = true;
+                foreach (var channel in this.channels)
                 {
-                    // FIXME:
-                    // can't get to the chans??
-                    // dgraph. Dispose();
+                    channel.Dispose();
                 }
             }
         }

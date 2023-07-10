@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-using System;
-using System.Threading.Tasks;
 using Dgraph.Transactions;
+using FluentResults;
 using Grpc.Core;
 
 namespace Dgraph
 {
-
     /// <summary>
     /// An IDgraphClient is connected to a Dgraph cluster (to one or more Alpha
     /// nodes).  Once a client is made, the client manages the connections and 
@@ -31,16 +29,30 @@ namespace Dgraph
     /// has been disposed and calls are made.</exception>
     public interface IDgraphClient : IDisposable
     {
+        /// <summary>
+        /// Log in the client to the default namespace (0) using the provided
+        /// credentials. Valid for the duration the client is alive.
+        /// </summary>
+        Task<Result> Login(string user, string password, CallOptions? options = null)
+        {
+            return LoginIntoNamespace(user, password, 0, options);
+        }
+
+        /// <summary>
+        /// Log in the client to the provided namespace using the provided
+        /// credentials. Valid for the duration the client is alive.
+        /// </summary>
+        Task<Result> LoginIntoNamespace(string user, string password, ulong ns, CallOptions? options = null);
 
         /// <summary>
         /// Alter the Dgraph database (alter schema, drop everything, etc.).
         /// </summary>
-        Task<FluentResults.Result> Alter(Api.Operation op, CallOptions? options = null);
+        Task<Result> Alter(Api.Operation op, CallOptions? options = null);
 
         /// <summary>
-        /// Returns the Dgraph version string.
+        /// Create a transaction that can run queries and mutations.
         /// </summary>
-        Task<FluentResults.Result<string>> CheckVersion(CallOptions? options = null);
+        ITransaction NewTransaction();
 
         /// <summary>
         /// Create a transaction that can only query.  
@@ -56,9 +68,8 @@ namespace Dgraph
         IQuery NewReadOnlyTransaction(Boolean bestEffort = false);
 
         /// <summary>
-        /// Create a transaction that can run queries and mutations.
+        /// Returns the Dgraph version string.
         /// </summary>
-        ITransaction NewTransaction();
-
+        Task<Result<string>> CheckVersion(CallOptions? options = null);
     }
 }

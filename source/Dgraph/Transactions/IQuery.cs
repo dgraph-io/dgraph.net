@@ -14,46 +14,58 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using FluentResults;
 using Grpc.Core;
 
 namespace Dgraph.Transactions
 {
-
-    public enum TransactionState { OK, Committed, Aborted, Error }
+    public enum TransactionState
+    {
+        OK,
+        Committed,
+        Aborted,
+        Error
+    }
 
     /// <summary>
-    /// Represents read-only 'transactions'.  Unlike ITransactions,
-    /// there's no need to discard, so use like:
-    ///
-    /// <code>  
-    /// var ro = client.NewReadOnlyTransaction()
-    /// var resp = ro.Query(...)
-    /// </code>
+    /// A read-only transaction that cannot commit mutations.
     /// </summary>
     public interface IQuery
     {
-
         TransactionState TransactionState { get; }
 
         /// <summary>
-        /// Run a query.
+        /// Run a query and return a JSON response.
         /// </summary>
-        Task<FluentResults.Result<Response>> Query(
-            string queryString,
-            CallOptions? options = null
-        );
+        Task<Result<Response>> Query(string queryString, CallOptions? options = null)
+        {
+            return QueryWithVars(queryString, new Dictionary<string, string>(), options);
+        }
 
         /// <summary>
-        /// Run a query with variables.
+        /// Run a query with variables and return a JSON response.
         /// </summary>
-        Task<FluentResults.Result<Response>> QueryWithVars(
+        Task<Result<Response>> QueryWithVars(
             string queryString,
             Dictionary<string, string> varMap,
             CallOptions? options = null
         );
 
-    }
+        /// <summary>
+        /// Run a query with variables and return a RDF response.
+        /// </summary>
+        Task<Result<Response>> QueryRDF(string queryString, CallOptions? options = null)
+        {
+            return QueryRDFWithVars(queryString, new Dictionary<string, string>(), options);
+        }
 
+        /// <summary>
+        /// Run a query and return a RDF response.
+        /// </summary>
+        Task<Result<Response>> QueryRDFWithVars(
+            string queryString,
+            Dictionary<string, string> varMap,
+            CallOptions? options = null
+        );
+    }
 }

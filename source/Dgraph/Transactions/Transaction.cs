@@ -14,112 +14,154 @@
  * limitations under the License.
  */
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentResults;
 using Grpc.Core;
 
 namespace Dgraph.Transactions
 {
-
-    internal class Transaction : ReadOnlyTransaction, ITransaction
+    internal class Transaction : ITransaction
     {
+        TransactionState IQuery.TransactionState => TransactionState;
+        private TransactionState TransactionState;
+        private readonly IDgraphClientInternal Client;
+        private readonly Api.TxnContext Context;
+        private readonly bool ReadOnly;
+        private readonly bool BestEffort;
 
         private bool HasMutated;
 
-        internal Transaction(IDgraphClientInternal client) : base(client, false, false) { }
+        internal Transaction(IDgraphClientInternal client, bool readOnly = false, bool bestEffort = false)
+        {
+            Client = client;
+            ReadOnly = readOnly;
+            BestEffort = bestEffort;
+            TransactionState = TransactionState.OK;
+            Context = new Api.TxnContext();
+        }
 
-        public async Task<Result<Response>> Mutate(
-            RequestBuilder request,
-            CallOptions? options = null
+        #region IQuery
+
+        Task<Result<Response>> IQuery.QueryWithVars(
+            string queryString,
+            Dictionary<string, string> varMap,
+            CallOptions? options
         )
+        {
+            var request = new Api.Request
+            {
+                Query = queryString,
+                RespFormat = Api.Request.Types.RespFormat.Json
+            };
+            if (varMap is not null)
+            {
+                request.Vars.Add(varMap);
+            }
+            return (this as ITransaction).Do(request, options);
+        }
+
+        Task<Result<Response>> IQuery.QueryRDFWithVars(
+            string queryString,
+            Dictionary<string, string> varMap,
+            Grpc.Core.CallOptions? options
+        )
+        {
+            var request = new Api.Request
+            {
+                Query = queryString,
+                RespFormat = Api.Request.Types.RespFormat.Rdf
+            };
+            if (varMap is not null)
+            {
+                request.Vars.Add(varMap);
+            }
+            return (this as ITransaction).Do(request, options);
+        }
+
+        #endregion
+
+        #region ITransaction
+
+        async Task<Result<Response>> ITransaction.Do(Api.Request request, CallOptions? options)
         {
             AssertNotDisposed();
 
-            CallOptions opts = options ?? new CallOptions();
-
             if (TransactionState != TransactionState.OK)
             {
-                return Results.Fail<Response>(new TransactionNotOK(TransactionState.ToString()));
+                return Result.Fail<Response>(new TransactionNotOK(TransactionState.ToString()));
             }
 
-            var req = request.Request;
-            if (req.Mutations.Count == 0)
+            if (string.IsNullOrWhiteSpace(request.Query) && request.Mutations.Count == 0)
             {
-                return Results.Ok<Response>(new Response(new Api.Response()));
+                return Result.Ok(new Response(new Api.Response()));
             }
 
-            HasMutated = true;
+            if (request.Mutations.Count > 0)
+            {
+                if (ReadOnly)
+                {
+                    return Result.Fail<Response>(new TransactionReadOnly());
+                }
+                HasMutated = true;
+            }
 
-            req.StartTs = Context.StartTs;
-            req.Hash = Context.Hash;
+            request.StartTs = Context.StartTs;
+            request.Hash = Context.Hash;
+            request.BestEffort = BestEffort;
+            request.ReadOnly = ReadOnly;
 
             var response = await Client.DgraphExecute(
-                async (dg) => Results.Ok<Response>(new Response(await dg.QueryAsync(req, opts))),
-                (rpcEx) => Results.Fail<Response>(new ExceptionalError(rpcEx))
+                async (dg) => Result.Ok<Response>(
+                    new Response(await dg.QueryAsync(
+                        request,
+                        options ?? new CallOptions())
+                )),
+                (rpcEx) => Result.Fail<Response>(new ExceptionalError(rpcEx))
             );
 
             if (response.IsFailed)
             {
-                await Discard(); // Ignore error - user should see the original error.
+                if (!ReadOnly && request.Mutations.Count > 0)
+                {
+                    await (this as ITransaction).Discard(); // Ignore error - user should see the original error.
+                    TransactionState = TransactionState.Error; // overwrite the aborted value
+                }
 
-                TransactionState = TransactionState.Error; // overwrite the aborted value
                 return response;
             }
 
-            if (req.CommitNow)
+            if (request.CommitNow)
             {
                 TransactionState = TransactionState.Committed;
             }
 
             var err = MergeContext(response.Value.DgraphResponse.Txn);
-            if (err.IsFailed)
-            {
-                // The WithReasons() here will turn this Ok, into a Fail.  So the result 
-                // and an error are in there like the Go lib.  But this can really only
-                // occur on an internal Dgraph error, so it's really an error
-                // and there's no need to code for cases to dig out the value and the 
-                // error - just 
-                //   if (...IsFailed) { ...assume mutation failed...}
-                // is enough.
-                return Results.Ok<Response>(response.Value).WithReasons(err.Reasons);
-            }
 
-            return Results.Ok<Response>(response.Value);
+            if (err.IsSuccess)
+            {
+                return response;
+            }
+            else
+            {
+                return err.ToResult<Response>();
+            }
         }
 
-        public async Task<FluentResults.Result<Response>> Mutate(
-            string setJson = null,
-            string deleteJson = null,
-            bool commitNow = false,
-            CallOptions? options = null
-        ) => await Mutate(
-                new RequestBuilder { CommitNow = commitNow }.WithMutations(
-                    new MutationBuilder
-                    {
-                        SetJson = setJson,
-                        DeleteJson = deleteJson
-                    }
-                ),
-                options);
-
         // Dispose method - Must be ok to call multiple times!
-        public async Task<Result> Discard(CallOptions? options = null)
+        async Task<Result> ITransaction.Discard(CallOptions? options)
         {
             if (TransactionState != TransactionState.OK)
             {
                 // TransactionState.Committed can't be discarded
                 // TransactionState.Error only entered after Discard() is already called.
                 // TransactionState.Aborted multiple Discards have no effect
-                return Results.Ok();
+                return Result.Ok();
             }
 
             TransactionState = TransactionState.Aborted;
 
             if (!HasMutated)
             {
-                return Results.Ok();
+                return Result.Ok();
             }
 
             Context.Aborted = true;
@@ -129,27 +171,27 @@ namespace Dgraph.Transactions
                 {
                     await dg.CommitOrAbortAsync(
                         Context,
-                        options ?? new CallOptions(null, null, default(CancellationToken)));
-                    return Results.Ok();
+                        options ?? new CallOptions());
+                    return Result.Ok();
                 },
-                (rpcEx) => Results.Fail(new ExceptionalError(rpcEx))
+                (rpcEx) => Result.Fail(new ExceptionalError(rpcEx))
             );
         }
 
-        public async Task<Result> Commit(CallOptions? options = null)
+        async Task<Result> ITransaction.Commit(CallOptions? options)
         {
             AssertNotDisposed();
 
             if (TransactionState != TransactionState.OK)
             {
-                return Results.Fail(new TransactionNotOK(TransactionState.ToString()));
+                return Result.Fail(new TransactionNotOK(TransactionState.ToString()));
             }
 
             TransactionState = TransactionState.Committed;
 
             if (!HasMutated)
             {
-                return Results.Ok();
+                return Result.Ok();
             }
 
             return await Client.DgraphExecute(
@@ -157,23 +199,20 @@ namespace Dgraph.Transactions
                 {
                     await dg.CommitOrAbortAsync(
                         Context,
-                        options ?? new CallOptions(null, null, default(CancellationToken)));
-                    return Results.Ok();
+                        options ?? new CallOptions());
+                    return Result.Ok();
                 },
-                (rpcEx) => Results.Fail(new ExceptionalError(rpcEx))
+                (rpcEx) => Result.Fail(new ExceptionalError(rpcEx))
             );
         }
 
-        // 
-        // ------------------------------------------------------
-        //              disposable pattern.
-        // ------------------------------------------------------
-        //
-        #region disposable pattern
+        #endregion
+
+        #region IDisposable
 
         private bool Disposed;
 
-        protected override void AssertNotDisposed()
+        private void AssertNotDisposed()
         {
             if (Disposed)
             {
@@ -181,24 +220,47 @@ namespace Dgraph.Transactions
             }
         }
 
-        public void Dispose()
+        void IDisposable.Dispose()
         {
-
             if (!Disposed && TransactionState == TransactionState.OK)
             {
-                Disposed = true;
-
                 // This makes Discard run async (maybe another thread)  So the current thread 
                 // might exit and get back to work (we don't really care how the Discard() went).
                 // But, this could race with disposal of everything, if this disposal is running
                 // with whole program shutdown.  I don't think this matters because Dgraph will
                 // clean up the transaction at some point anyway and if we've exited the program, 
                 // we don't care.
-                Task.Run(() => Discard());
+                Task.Run(() => (this as ITransaction).Discard());
             }
+
+            Disposed = true;
         }
 
         #endregion
 
+        private Result MergeContext(Api.TxnContext srcContext)
+        {
+            if (srcContext == null)
+            {
+                return Result.Ok();
+            }
+
+            if (Context.StartTs == 0)
+            {
+                Context.StartTs = srcContext.StartTs;
+            }
+
+            if (Context.StartTs != srcContext.StartTs)
+            {
+                return Result.Fail(new StartTsMismatch());
+            }
+
+            Context.Hash = srcContext.Hash;
+
+            Context.Keys.Add(srcContext.Keys);
+            Context.Preds.Add(srcContext.Preds);
+
+            return Result.Ok();
+        }
     }
 }

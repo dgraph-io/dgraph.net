@@ -14,46 +14,43 @@
  * limitations under the License.
  */
 
-using System.Linq;
-using Api;
-
-namespace Dgraph.Transactions
+namespace Dgraph
 {
-
     public class RequestBuilder
     {
+        internal Api.Request Request = new Api.Request();
 
-        internal Request Request = new Request();
-
-        public string Query
+        public RequestBuilder WithQuery(string query)
         {
-            get
-            {
-                return Request.Query;
-            }
-            set
-            {
-                Request.Query = value;
-            }
+            Request.Query = query;
+            return this;
         }
 
-        public bool CommitNow
+        public RequestBuilder WithVars(Dictionary<string, string> varMap)
         {
-            get
+            if (varMap is not null)
             {
-                return Request.CommitNow;
+                Request.Vars.Add(varMap);
             }
-            set
-            {
-                Request.CommitNow = value;
-            }
+            return this;
         }
 
         public RequestBuilder WithMutations(params MutationBuilder[] mutations)
         {
-            Request.Mutations.Add(mutations.Select(mb => mb.Mutation));
+            Request.Mutations.Add(mutations.Select(m => m.Mutation));
             return this;
         }
 
+        public RequestBuilder WithMutations(params Api.Mutation[] mutations)
+        {
+            Request.Mutations.Add(mutations);
+            return this;
+        }
+
+        public RequestBuilder CommitNow(bool commitNow = true)
+        {
+            Request.CommitNow = commitNow;
+            return this;
+        }
     }
 }

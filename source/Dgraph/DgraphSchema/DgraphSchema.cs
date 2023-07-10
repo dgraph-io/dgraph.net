@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Dgraph.Schema
 {
-
     public class DgraphSchema
     {
-
         public List<DrgaphPredicate> Schema { get; set; }
 
         public List<DgraphType> Types { get; set; }

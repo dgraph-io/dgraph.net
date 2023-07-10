@@ -14,17 +14,10 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Api;
-
 namespace Dgraph.Transactions
 {
-
     public class Response
     {
-
         public readonly Api.Response DgraphResponse;
 
         private Lazy<Dictionary<string, string>> _Uids;
@@ -39,8 +32,8 @@ namespace Dgraph.Transactions
 
         public string Json => DgraphResponse.Json.ToStringUtf8();
 
+        public string Rdf => DgraphResponse.Rdf.ToStringUtf8();
+
         public Dictionary<string, string> Uids => _Uids.Value;
-
     }
-
 }
