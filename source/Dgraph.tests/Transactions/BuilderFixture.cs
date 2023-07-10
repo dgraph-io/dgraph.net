@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-using Dgraph.Transactions;
+
 using FluentAssertions;
 using Google.Protobuf;
 using NUnit.Framework;
@@ -23,7 +22,6 @@ namespace Dgraph.tests.Transactions
 {
     public class BuilderFixture
     {
-
         [TestCase(null, null, null)]
         [TestCase("query", null, null)]
         [TestCase(null, true, null)]
@@ -35,11 +33,11 @@ namespace Dgraph.tests.Transactions
 
             if (query != null)
             {
-                builder.Query = query;
+                builder.WithQuery(query);
             }
             if (commit != null)
             {
-                builder.CommitNow = commit.Value;
+                builder.CommitNow(commit.Value);
             }
             if (withMutation)
             {
@@ -63,14 +61,14 @@ namespace Dgraph.tests.Transactions
 
             if (query != null)
             {
-                builder.Query = query;
+                builder.WithQuery(query);
             }
             if (commit != null)
             {
-                builder.CommitNow = commit.Value;
+                builder.CommitNow(commit.Value);
             }
 
-            var mb = new MutationBuilder() { SetJson = "json" };
+            var mb = new MutationBuilder().SetJson("json");
             if (withMutation)
             {
                 builder.WithMutations(mb);
@@ -108,14 +106,12 @@ namespace Dgraph.tests.Transactions
         )
         {
 
-            var mb = new MutationBuilder
-            {
-                SetJson = setJson,
-                SetNquads = setNQ,
-                DeleteJson = deleteJson,
-                DelNquads = deleteNQ,
-                Cond = cond
-            };
+            var mb = new MutationBuilder()
+                .SetJson(setJson)
+                .SetNquads(setNQ)
+                .DeleteJson(deleteJson)
+                .DelNquads(deleteNQ)
+                .Cond(cond);
 
             mb.Mutation.Should().Be(
                 new Api.Mutation

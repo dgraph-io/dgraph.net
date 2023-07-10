@@ -13,12 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+
 using Dgraph.tests.e2e.Errors;
 using Dgraph.tests.e2e.Orchestration;
 using Dgraph.tests.e2e.Tests;
@@ -29,7 +24,6 @@ using Serilog;
 
 namespace Dgraph.tests.e2e
 {
-
     [Command(Name = "Dgraph.net E2E test runner")]
     [HelpOption("--help")]
     class Program

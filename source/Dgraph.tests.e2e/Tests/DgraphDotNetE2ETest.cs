@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using Assent.Namers;
 using Dgraph.tests.e2e.Errors;
 using Dgraph.tests.e2e.Orchestration;
 using FluentResults;
 using Microsoft.Extensions.FileProviders;
+using Serilog;
 
 namespace Dgraph.tests.e2e.Tests
 {
@@ -39,7 +38,11 @@ namespace Dgraph.tests.e2e.Tests
             ClientFactory = clientFactory;
 
             AssentConfiguration = new Assent.Configuration()
-                .UsingNamer(new SubdirectoryNamer("Approved"));
+                .UsingNamer(new SubdirectoryNamer("Approved"))
+                .UsingReporter((received, approved) =>
+                {
+                    Log.Warning("Expected {received}, got {approved}", received, approved);
+                });
             // FIXME: .UsingSanitiser(...) might want to add this to remove versions etc
             // FIXME: when I add this to a build pipeline it needs this turned off when running on the build server
             // .SetInteractive(...);

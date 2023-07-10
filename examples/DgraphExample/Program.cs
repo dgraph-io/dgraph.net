@@ -9,7 +9,7 @@ namespace DgraphExample
             // Connect to Dgraph Cloud.
             var cloudUrl = "https://green-bird.grpc.us-east-1.aws.cloud.dgraph.io/graphql";
             var APIKEY = "xxx=";
-            using var client = new DgraphClient(DgraphCloudChannel.Create(cloudUrl, APIKEY));
+            using var client = DgraphClient.Create(DgraphCloudChannel.Create(cloudUrl, APIKEY));
 
             var version = await client.CheckVersion();
 
@@ -26,6 +26,5 @@ namespace DgraphExample
             Console.WriteLine(result);
 
         }
-
     }
 }

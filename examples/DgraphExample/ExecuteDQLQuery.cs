@@ -5,7 +5,7 @@ namespace DgraphExample
 {
     class ExecuteDQL
     {
-        public static async Task<string> Query(DgraphClient Client, string query)
+        public static async Task<string> Query(IDgraphClient Client, string query)
         {
             using (ITransaction transaction = Client.NewTransaction())
             {

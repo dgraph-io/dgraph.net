@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-using System.Threading.Tasks;
 using Assent;
 using Dgraph.tests.e2e.Orchestration;
 using FluentAssertions;
 using Newtonsoft.Json;
 using Dgraph.Schema;
-using Api;
-using System;
-using System.Threading;
 
 namespace Dgraph.tests.e2e.Tests
 {
@@ -32,15 +28,14 @@ namespace Dgraph.tests.e2e.Tests
 
         public async override Task Test()
         {
-            using (var client = await ClientFactory.GetDgraphClient())
-            {
-                await InitialSchemaIsAsExpected(client);
-                await AlterSchemAsExpected(client);
-                await AlterSchemaAgainAsExpected(client);
-                await SchemaQueryWithRestrictions(client);
+            using var client = await ClientFactory.GetDgraphClient();
 
-                await ErrorsResultInFailedQuery(client);
-            }
+            await InitialSchemaIsAsExpected(client);
+            await AlterSchemAsExpected(client);
+            await AlterSchemaAgainAsExpected(client);
+            await SchemaQueryWithRestrictions(client);
+
+            await ErrorsResultInFailedQuery(client);
         }
 
         private async Task InitialSchemaIsAsExpected(IDgraphClient client)
@@ -55,7 +50,7 @@ namespace Dgraph.tests.e2e.Tests
         private async Task AlterSchemAsExpected(IDgraphClient client)
         {
             var alterSchemaResult = await client.Alter(
-                new Operation { Schema = ReadEmbeddedFile("test.schema") });
+                new Api.Operation { Schema = ReadEmbeddedFile("test.schema") });
             AssertResultIsSuccess(alterSchemaResult);
 
             // After an Alter, Dgraph computes indexes in the background.
@@ -75,7 +70,7 @@ namespace Dgraph.tests.e2e.Tests
         private async Task AlterSchemaAgainAsExpected(IDgraphClient client)
         {
             var alterSchemaResult = await client.Alter(
-                new Operation { Schema = ReadEmbeddedFile("altered.schema") });
+                new Api.Operation { Schema = ReadEmbeddedFile("altered.schema") });
             AssertResultIsSuccess(alterSchemaResult);
 
             Thread.Sleep(TimeSpan.FromSeconds(5));

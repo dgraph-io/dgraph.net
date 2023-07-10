@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using System;
 using FluentResults;
 
 namespace Dgraph.tests.e2e.Errors

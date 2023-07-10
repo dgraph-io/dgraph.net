@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,18 +28,16 @@ using NUnit.Framework;
 
 namespace Dgraph.tests.Transactions
 {
-
     public class MutateFixture : TransactionFixtureBase
     {
-
         [Test]
         public async Task Mutate_EmptyMutationDoesNothing()
         {
             (var client, _) = MinimalClient();
-            var txn = new Transaction(client);
+            ITransaction txn = new Transaction(client);
 
             var req = new RequestBuilder();
-            await txn.Mutate(req);
+            await txn.Do(req);
 
             await client.DidNotReceive().DgraphExecute(
                 Arg.Any<Func<Api.Dgraph.DgraphClient, Task<Result<Response>>>>(),
@@ -51,13 +49,10 @@ namespace Dgraph.tests.Transactions
         public async Task Mutate_CommitNowChangesStateToCommitted()
         {
             (var client, _) = MinimalClient();
-            var txn = new Transaction(client);
+            ITransaction txn = new Transaction(client);
 
-            var req = new RequestBuilder()
-            {
-                CommitNow = true
-            }.WithMutations(new MutationBuilder { SetJson = "json" });
-            await txn.Mutate(req);
+            var mu = new MutationBuilder().CommitNow().SetJson("json");
+            await txn.Mutate(mu);
 
             txn.TransactionState.Should().Be(TransactionState.Committed);
         }
@@ -73,18 +68,18 @@ namespace Dgraph.tests.Transactions
         {
             (var client, _) = MinimalClient();
 
-            var txn = new Transaction(client);
+            ITransaction txn = new Transaction(client);
 
             var req = new RequestBuilder().
-                WithMutations(new MutationBuilder { SetJson = "json" });
-            await txn.Mutate(req);
+                WithMutations(new MutationBuilder().SetJson("json"));
+            await txn.Do(req);
 
             client.DgraphExecute(
                 Arg.Any<Func<Api.Dgraph.DgraphClient, Task<Result<Response>>>>(),
                 Arg.Any<Func<RpcException, Result<Response>>>()).Returns(
-                    Results.Fail(new ExceptionalError(new RpcException(new Status(), "Something failed"))));
+                    Result.Fail(new ExceptionalError(new RpcException(new Status(), "Something failed"))));
 
-            var result = await txn.Mutate(req);
+            var result = await txn.Do(req);
 
             result.IsFailed.Should().Be(true);
             result.Errors.First().Should().BeOfType<ExceptionalError>();
@@ -95,7 +90,7 @@ namespace Dgraph.tests.Transactions
         public async Task Mutate_PassesBackResult()
         {
             (var client, var assigned) = MinimalClient();
-            var txn = new Transaction(client);
+            ITransaction txn = new Transaction(client);
 
             var response = new Api.Response() { Json = ByteString.CopyFromUtf8("json") };
             response.Uids.Add(new Dictionary<string, string> { { "node1", "0x1" } });
@@ -103,12 +98,12 @@ namespace Dgraph.tests.Transactions
             client.DgraphExecute(
                 Arg.Any<Func<Api.Dgraph.DgraphClient, Task<Result<Response>>>>(),
                 Arg.Any<Func<RpcException, Result<Response>>>()).Returns(
-                    Results.Ok(new Response(response)));
+                    Result.Ok(new Response(response)));
 
             var req = new RequestBuilder().
-                WithMutations(new MutationBuilder { SetJson = "json" });
-            await txn.Mutate(req);
-            var result = await txn.Mutate(req);
+                WithMutations(new MutationBuilder().SetJson("json"));
+            await txn.Do(req);
+            var result = await txn.Do(req);
 
             result.IsSuccess.Should().BeTrue();
             result.Value.DgraphResponse.Should().BeEquivalentTo(response);
