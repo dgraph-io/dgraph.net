@@ -1,5 +1,13 @@
+dgraph.drop.op: string .
+dgraph.graphql.p_query: string @index(sha256) .
 dgraph.graphql.schema: string .
+dgraph.graphql.xid: string @index(exact) @upsert .
 dgraph.type: [string] @index(exact) .
 type dgraph.graphql {
 	dgraph.graphql.schema
+	dgraph.graphql.xid
+}
+
+type dgraph.graphql.persisted_query {
+	dgraph.graphql.p_query
 }
