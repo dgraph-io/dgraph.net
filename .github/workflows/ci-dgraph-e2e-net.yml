@@ -1,0 +1,42 @@
+name: ci-dgraph-e2e-net-tests
+
+on:
+  push:
+    branches: 
+    - master
+  pull_request:
+    branches: 
+    - master
+
+defaults:
+  run:
+    working-directory: source/Dgraph.tests.e2e
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup .NET Core SDK 7.0.x
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+
+    - name: Spin up Dgraph 
+      run: |
+        mkdir dgraph_data
+        docker pull dgraph/standalone:latest
+        docker run --name dgraph -d -p "8080:8080" -p "9080:9080" -v dgraph_data:/dgraph dgraph/standalone:latest
+
+    - name: dotnet restore
+      run: dotnet restore
+
+    - name: dotnet build
+      run: dotnet build --configuration Release --no-restore
+
+    - name: dotnet run
+      run: dotnet run --no-restore
