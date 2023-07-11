@@ -20,9 +20,9 @@ defaults:
     working-directory: source/Dgraph.tests.e2e
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  dotnet-e2e-tests:
+    name: dotnet-e2e-tests
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3

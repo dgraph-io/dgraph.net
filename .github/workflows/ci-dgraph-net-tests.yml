@@ -16,7 +16,8 @@ on:
     - cron: "0 0 * * *" # run workflow daily
 
 jobs:
-  build:
+  dotnet-tests:
+    name: dotnet-tests
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout Dgraph.net
