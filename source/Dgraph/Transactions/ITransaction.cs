@@ -51,16 +51,8 @@ namespace Dgraph.Transactions
         }
 
         /// <summary>
-        /// Mutate allows data stored on Dgraph instances to be modified.
-        /// The fields in api.Mutation come in pairs, set and delete.
-        /// Mutations can either be encoded as JSON or as RDFs.
-        ///
-        /// If CommitNow is set, then this call will result in the transaction
-        /// being committed. In this case, an explicit call to Commit doesn't
-        /// need to be made subsequently.
-        ///
-        /// If the mutation fails, then the transaction is discarded and all
-        /// future operations on it will fail.
+        /// Run a mutation using a <see cref="MutationBuilder"/>. 
+        /// Otherwise identical to Mutate(<see cref="Api.Mutation"/>).
         /// </summary>
         Task<Result<Response>> Mutate(MutationBuilder mutation, CallOptions? options = null)
         {
@@ -68,7 +60,8 @@ namespace Dgraph.Transactions
         }
 
         /// <summary>
-        /// Execute a query followed by one or more mutations.
+        /// Execute a query using a <see cref="RequestBuilder"/>.
+        /// Otherwise identical to Do(<see cref="Api.Request"/>).
         /// </summary>
         Task<Result<Response>> Do(RequestBuilder request, CallOptions? options = null)
         {
@@ -77,6 +70,10 @@ namespace Dgraph.Transactions
 
         /// <summary>
         /// Execute a query followed by one or more mutations.
+        ///
+        /// If CommitNow is set, then this call will result in the transaction
+        /// being committed. In this case, an explicit call to Commit doesn't
+        /// need to be made subsequently.
         /// </summary>
         Task<Result<Response>> Do(Api.Request request, CallOptions? options = null);
 

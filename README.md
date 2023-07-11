@@ -214,7 +214,8 @@ triples that have already been parsed into our internal format. As such, these f
 mainly used internally and you should use the `SetNquads` and `DelNquads` fields instead
 if you plan on using RDF.
 
-While you can construct a `Dgraph.Api.Mutation` object directly, it is easier to let `MutationBuilder` handle implementation details like converting `string` to `Google.Protobuf.ByteString`.
+While you can construct a `Dgraph.Api.Mutation` object directly, it is easier to let `MutationBuilder`
+handle implementation details like converting `string` to `Google.Protobuf.ByteString`.
 
 ```c#
 using Dgraph;

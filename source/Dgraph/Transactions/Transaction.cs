@@ -102,13 +102,18 @@ namespace Dgraph.Transactions
                     return Result.Fail<Response>(new TransactionReadOnly());
                 }
 
+                // If all of the request's mutations are set to CommitNow, then set the request to CommitNow.
                 if (request.Mutations.All(r => r.CommitNow))
                 {
                     request.CommitNow = true;
                 }
+                // Otherwise, if some of the mutations are set to CommitNow and some are not, 
+                // then this is an ambiguous state for the request, so return a failed response.
                 else if (request.Mutations.Any(r => r.CommitNow))
                 {
-                    return Result.Fail<Response>(new TransactionMalformed("CommitNow on all transaction mutations must be all true or all false."));
+                    return Result.Fail<Response>(
+                        new TransactionMalformed("CommitNow on request mutations must be all true or all false.")
+                    );
                 }
 
                 HasMutated = true;
