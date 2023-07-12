@@ -106,14 +106,6 @@ namespace Dgraph
 
         #region execution
 
-        private int NextConnection = 0;
-        private int GetNextConnection()
-        {
-            var next = NextConnection;
-            NextConnection = (next + 1) % dgraphs.Count;
-            return next;
-        }
-
         public async Task<T> DgraphExecute<T>(
             Func<Api.Dgraph.DgraphClient, Task<T>> execute,
             Func<RpcException, T> onFail
@@ -123,7 +115,9 @@ namespace Dgraph
 
             try
             {
-                return await execute(dgraphs[GetNextConnection()]);
+                // Randomly pick the next client to use.
+                var nextClient = dgraphs[Random.Shared.Next(dgraphs.Count)];
+                return await execute(nextClient);
             }
             catch (RpcException rpcEx)
             {
