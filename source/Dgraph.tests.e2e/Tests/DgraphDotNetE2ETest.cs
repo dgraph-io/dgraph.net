@@ -41,7 +41,9 @@ namespace Dgraph.tests.e2e.Tests
                 .UsingNamer(new SubdirectoryNamer("Approved"))
                 .UsingReporter((received, approved) =>
                 {
-                    Log.Warning("Expected {received}, got {approved}", received, approved);
+                    received = System.IO.File.ReadAllText(received);
+                    approved = System.IO.File.ReadAllText(approved);
+                    Log.Warning("Expected:\n{approved}\nReceived:\n{received}\n", approved, received);
                 });
             // FIXME: .UsingSanitiser(...) might want to add this to remove versions etc
             // FIXME: when I add this to a build pipeline it needs this turned off when running on the build server
