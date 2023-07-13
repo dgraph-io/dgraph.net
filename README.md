@@ -103,7 +103,7 @@ All subsequent operations via the logged in client will send along the stored ac
 If your server additionally has namespaces (Dgraph v21.03 or above), use `LoginIntoNamespace`.
 
 ```c#
-var response = await dgraphClient.LoginIntoNamespace("user", "password", 0x10);
+var response = await dgraphClient.LoginIntoNamespace("groot", "password", 123);
 if (response.IsFailed) {
     // Handle errors
 }
