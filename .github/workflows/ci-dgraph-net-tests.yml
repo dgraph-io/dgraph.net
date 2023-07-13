@@ -1,0 +1,38 @@
+name: ci-dgraph-net-tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    branches:
+      - master
+  schedule:
+    - cron: "0 0 * * *" # run workflow daily
+
+jobs:
+  dotnet-tests:
+    name: dotnet-tests
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Dgraph.net
+        uses: actions/checkout@v3
+
+      - name: Setup .NET Core SDK 7.0.x
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
