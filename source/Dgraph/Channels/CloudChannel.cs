@@ -63,7 +63,7 @@ namespace Dgraph
 
             var credentials = CallCredentials.FromInterceptor((context, metadata) =>
             {
-                metadata.Add("DG-Auth", apiKey);
+                metadata.Add("authorization", apiKey);
                 return Task.CompletedTask;
             });
 
