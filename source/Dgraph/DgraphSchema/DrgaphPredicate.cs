@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-
 namespace Dgraph.Schema
 {
-
     public class DrgaphPredicate
     {
         public string Predicate { get; set; }

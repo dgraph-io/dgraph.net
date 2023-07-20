@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Dgraph.Schema
 {
-
     public class DgraphType
     {
-
         public string Name { get; set; }
 
         public List<DgraphField> Fields { get; set; }
@@ -32,7 +26,5 @@ namespace Dgraph.Schema
             "type " + Name + " {\n" +
             String.Join("\n", Fields.Select(f => "\t" + f.ToString())) + "\n" +
             "}";
-
     }
-
 }

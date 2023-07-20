@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-using System;
-using System.Threading.Tasks;
 using Grpc.Core;
 
 namespace Dgraph
 {
-
     /// <summary>
     /// Internal dealings of clients with Dgraph --- Not part of the
     /// external interface
     /// </summary>
     internal interface IDgraphClientInternal
     {
-
         Task<T> DgraphExecute<T>(
             Func<Api.Dgraph.DgraphClient, Task<T>> execute,
             Func<RpcException, T> onFail
         );
-
     }
 }
