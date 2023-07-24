@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -26,7 +26,6 @@ namespace Dgraph.tests.Transactions
 {
     public class TransactionFixtureBase
     {
-
         internal (IDgraphClientInternal, Response) MinimalClient()
         {
             var client = Substitute.For<IDgraphClientInternal>();
@@ -36,15 +35,15 @@ namespace Dgraph.tests.Transactions
             var response = new Response(dgResp);
             client.DgraphExecute(
                 Arg.Any<Func<Api.Dgraph.DgraphClient, Task<Result<Response>>>>(),
-                Arg.Any<Func<RpcException, Result<Response>>>()).Returns(Results.Ok(response));
+                Arg.Any<Func<RpcException, Result<Response>>>()).Returns(Result.Ok(response));
 
             return (client, response);
         }
 
         protected List<Func<Task<ResultBase>>> GetAllTestFunctions(ITransaction txn) =>
             new List<Func<Task<ResultBase>>> {
-                async () => await txn.Mutate(new RequestBuilder().
-                    WithMutations(new MutationBuilder{ SetJson = "json" })),
+                async () => await txn.Do(new RequestBuilder().
+                    WithMutations(new MutationBuilder().SetJson("json"))),
                 async () => await txn.Query("query"),
                 async () => await txn.QueryWithVars("query", null),
                 async () => await txn.Commit()

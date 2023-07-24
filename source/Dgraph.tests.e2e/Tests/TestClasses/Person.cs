@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-using System;
-using System.Collections.Generic;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
 namespace Dgraph.tests.e2e.Tests.TestClasses
 {
-
     [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
     public class Person
     {
@@ -34,5 +31,4 @@ namespace Dgraph.tests.e2e.Tests.TestClasses
         public double Height { get; set; }
         public List<int> Scores { get; } = new List<int>();
     }
-
 }

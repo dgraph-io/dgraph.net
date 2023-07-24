@@ -1,7 +1,10 @@
 abool: bool .
 car: uid @count .
 carMake: string @index(hash) .
+dgraph.drop.op: string .
+dgraph.graphql.p_query: string @index(sha256) .
 dgraph.graphql.schema: string .
+dgraph.graphql.xid: string @index(exact) @upsert .
 dgraph.type: [string] @index(exact) .
 dob: datetime @index(day) .
 friends: [uid] @reverse @count .
@@ -19,4 +22,9 @@ type Person {
 
 type dgraph.graphql {
 	dgraph.graphql.schema
+	dgraph.graphql.xid
+}
+
+type dgraph.graphql.persisted_query {
+	dgraph.graphql.p_query
 }

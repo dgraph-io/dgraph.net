@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,7 +33,7 @@ namespace Dgraph.tests.Transactions
         public async Task Commit_SetsTransactionStateToCommitted()
         {
             var client = Substitute.For<IDgraphClientInternal>();
-            var txn = new Transaction(client);
+            ITransaction txn = new Transaction(client);
             await txn.Commit();
 
             txn.TransactionState.Should().Be(TransactionState.Committed);
@@ -43,7 +43,7 @@ namespace Dgraph.tests.Transactions
         public async Task Commit_ClientNotReceiveCommitIfNoMutation()
         {
             var client = Substitute.For<IDgraphClientInternal>();
-            var txn = new Transaction(client);
+            ITransaction txn = new Transaction(client);
             await txn.Commit();
 
             await client.DidNotReceive().DgraphExecute(
@@ -56,11 +56,11 @@ namespace Dgraph.tests.Transactions
         {
             (var client, _) = MinimalClient();
 
-            var txn = new Transaction(client);
+            ITransaction txn = new Transaction(client);
 
             var req = new RequestBuilder().
-                WithMutations(new MutationBuilder { SetJson = "json" });
-            await txn.Mutate(req);
+                WithMutations(new MutationBuilder().SetJson("json"));
+            await txn.Do(req);
             await txn.Commit();
 
             // FIXME: can't really test what the Dgraph got without
@@ -75,16 +75,16 @@ namespace Dgraph.tests.Transactions
         {
             (var client, _) = MinimalClient();
 
-            var txn = new Transaction(client);
+            ITransaction txn = new Transaction(client);
 
             var req = new RequestBuilder().
-                WithMutations(new MutationBuilder { SetJson = "json" });
-            await txn.Mutate(req);
+                WithMutations(new MutationBuilder().SetJson("json"));
+            await txn.Do(req);
 
             client.DgraphExecute(
                 Arg.Any<Func<Api.Dgraph.DgraphClient, Task<Result>>>(),
                 Arg.Any<Func<RpcException, Result>>()).Returns(
-                    Results.Fail(new ExceptionalError(
+                    Result.Fail(new ExceptionalError(
                         new RpcException(new Status(), "Something failed"))));
             var result = await txn.Commit();
 

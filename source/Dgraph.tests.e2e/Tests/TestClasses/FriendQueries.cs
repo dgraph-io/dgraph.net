@@ -13,17 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-using System.Collections.Generic;
+
 using FluentAssertions;
 using Newtonsoft.Json.Linq;
 
 namespace Dgraph.tests.e2e.Tests.TestClasses
 {
-
     public class FriendQueries
     {
-
         public static string QueryByUid(string uid) =>
             "{  "
             + $"    q(func: uid({uid})) "

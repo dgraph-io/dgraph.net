@@ -13,17 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+
 using Dgraph.tests.e2e.Orchestration;
 using Dgraph.tests.e2e.Tests.TestClasses;
 using FluentAssertions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Api;
-using Dgraph.Transactions;
 
 namespace Dgraph.tests.e2e.Tests
 {
@@ -40,7 +35,7 @@ namespace Dgraph.tests.e2e.Tests
 
             var alterSchemaResult = await
                 (await ClientFactory.GetDgraphClient()).Alter(
-                    new Operation { Schema = ReadEmbeddedFile("test.schema") });
+                    new Api.Operation { Schema = ReadEmbeddedFile("test.schema") });
             AssertResultIsSuccess(alterSchemaResult);
 
             Person1 = new Person()
@@ -74,66 +69,62 @@ namespace Dgraph.tests.e2e.Tests
 
         public async override Task Test()
         {
-            using (var client = await ClientFactory.GetDgraphClient())
-            {
-                await AddThreePeople(client);
-                await QueryAllThreePeople(client);
-                await AlterAPerson(client);
-                await QueryWithVars(client);
-                await DeleteAPerson(client);
-            }
+            using var client = await ClientFactory.GetDgraphClient();
+
+            await AddThreePeople(client);
+            await QueryAllThreePeople(client);
+            await AlterAPerson(client);
+            await QueryWithVars(client);
+            await DeleteAPerson(client);
         }
 
         private async Task AddThreePeople(IDgraphClient client)
         {
+            using var transaction = client.NewTransaction();
 
-            using (var transaction = client.NewTransaction())
-            {
+            // Serialize the objects to json in whatever way works best for you.
+            //
+            // The CamelCaseNamingStrategy attribute on the type means these
+            // get serialised with initial lower case.
+            var personList = new List<Person> { Person1, Person2, Person3 };
+            var json = JsonConvert.SerializeObject(personList);
 
-                // Serialize the objects to json in whatever way works best for you.
-                //
-                // The CamelCaseNamingStrategy attribute on the type means these
-                // get serialised with initial lower case.
-                var personList = new List<Person> { Person1, Person2, Person3 };
-                var json = JsonConvert.SerializeObject(personList);
+            // There's two mutation options.  For just one mutation, use this version
+            var result = await transaction.Mutate(new MutationBuilder().SetJson(json));
 
-                // There's two mutation options.  For just one mutation, use this version
-                var result = await transaction.Mutate(setJson: json);
+            // For more complicated multi-mutation requests or upsert mutations
+            // see the upsert test.
 
-                // For more complicated multi-mutation requests or upsert mutations
-                // see the upsert test.
+            AssertResultIsSuccess(result, "Mutation failed");
 
-                AssertResultIsSuccess(result, "Mutation failed");
+            // The payload of the result contains a node->uid map of newly
+            // allocated nodes.  If the nodes don't have uid names in the
+            // mutation, then the map is like
+            //
+            // {{ "blank-0": "0xa", "blank-1": "0xb", "blank-2": "0xc", ... }}
+            //
+            // If the
+            // mutation has '{ "uid": "_:Person1" ... }' etc, then the blank
+            // node map is like
+            // 
+            // {{ "Person3": "0xe", "Person1": "0xf", "Person2": "0xd", ... }}
 
-                // The payload of the result contains a node->uid map of newly
-                // allocated nodes.  If the nodes don't have uid names in the
-                // mutation, then the map is like
-                //
-                // {{ "blank-0": "0xa", "blank-1": "0xb", "blank-2": "0xc", ... }}
-                //
-                // If the
-                // mutation has '{ "uid": "_:Person1" ... }' etc, then the blank
-                // node map is like
-                // 
-                // {{ "Person3": "0xe", "Person1": "0xf", "Person2": "0xd", ... }}
+            result.Value.Uids.Count.Should().Be(3);
 
-                result.Value.Uids.Count.Should().Be(3);
+            // It's no required to save the uid's like this, but can work
+            // nicely ... and makes these tests easier to keep track of.
 
-                // It's no required to save the uid's like this, but can work
-                // nicely ... and makes these tests easier to keep track of.
+            Person1.Uid = result.Value.Uids[Person1.Uid.Substring(2)];
+            Person2.Uid = result.Value.Uids[Person2.Uid.Substring(2)];
+            Person3.Uid = result.Value.Uids[Person3.Uid.Substring(2)];
 
-                Person1.Uid = result.Value.Uids[Person1.Uid.Substring(2)];
-                Person2.Uid = result.Value.Uids[Person2.Uid.Substring(2)];
-                Person3.Uid = result.Value.Uids[Person3.Uid.Substring(2)];
+            var transactionResult = await transaction.Commit();
+            AssertResultIsSuccess(transactionResult);
 
-                var transactionResult = await transaction.Commit();
-                AssertResultIsSuccess(transactionResult);
-            }
         }
 
         private async Task QueryAllThreePeople(IDgraphClient client)
         {
-
             var people = new List<Person> { Person1, Person2, Person3 };
 
             foreach (var person in people)
@@ -149,24 +140,23 @@ namespace Dgraph.tests.e2e.Tests
 
         private async Task AlterAPerson(IDgraphClient client)
         {
-            using (var transaction = client.NewTransaction())
-            {
-                Person3.Friends.Add(Person2);
+            using var transaction = client.NewTransaction();
 
-                // This will serialize the whole object.  You might not want to
-                // do that, and maybe only add in the bits that have changed
-                // instead.
-                var json = JsonConvert.SerializeObject(Person3);
+            Person3.Friends.Add(Person2);
 
-                var result = await transaction.Mutate(setJson: json);
-                AssertResultIsSuccess(result, "Mutation failed");
+            // This will serialize the whole object.  You might not want to
+            // do that, and maybe only add in the bits that have changed
+            // instead.
+            var json = JsonConvert.SerializeObject(Person3);
 
-                // no nodes were allocated
-                result.Value.Uids.Count.Should().Be(0);
+            var result = await transaction.Mutate(new MutationBuilder().SetJson(json));
+            AssertResultIsSuccess(result, "Mutation failed");
 
-                var transactionResult = await transaction.Commit();
-                AssertResultIsSuccess(transactionResult);
-            }
+            // no nodes were allocated
+            result.Value.Uids.Count.Should().Be(0);
+
+            var transactionResult = await transaction.Commit();
+            AssertResultIsSuccess(transactionResult);
 
             var queryPerson = await client.NewReadOnlyTransaction().
                     Query(FriendQueries.QueryByUid(Person3.Uid));
@@ -188,17 +178,16 @@ namespace Dgraph.tests.e2e.Tests
 
         private async Task DeleteAPerson(IDgraphClient client)
         {
-            using (var transaction = client.NewTransaction())
-            {
+            using var transaction = client.NewTransaction();
 
-                // delete a node by passing JSON like this to delete
-                var deleteResult = await transaction.Mutate(
-                    deleteJson: $"{{\"uid\": \"{Person1.Uid}\"}}");
-                AssertResultIsSuccess(deleteResult, "Delete failed");
+            // delete a node by passing JSON like this to delete
+            var deleteResult = await transaction.Mutate(
+                new MutationBuilder().DeleteJson($"{{\"uid\": \"{Person1.Uid}\"}}")
+            );
+            AssertResultIsSuccess(deleteResult, "Delete failed");
 
-                var transactionResult = await transaction.Commit();
-                AssertResultIsSuccess(transactionResult);
-            }
+            var transactionResult = await transaction.Commit();
+            AssertResultIsSuccess(transactionResult);
 
             // that person should be gone...
             var queryPerson1 = await client.NewReadOnlyTransaction().
@@ -226,6 +215,5 @@ namespace Dgraph.tests.e2e.Tests
 
             person3.Friends.Count.Should().Be(2);
         }
-
     }
 }
