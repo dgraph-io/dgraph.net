@@ -1,4 +1,4 @@
-# Dgraph.net ![Nuget](https://img.shields.io/nuget/v/dgraph)
+# Dgraph.net [![Nuget](https://img.shields.io/nuget/v/dgraph)](https://www.nuget.org/packages/Dgraph)
 
 This client follows the [Dgraph Go client][goclient] closely.
 
