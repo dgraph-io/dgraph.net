@@ -2,5 +2,13 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "local>hypermodeinc/renovate-config"
+  ],
+  "packageRules": [
+    {
+      "groupName": "test minor and patch",
+      "matchFileNames": ["source/Dgraph.tests/**", "source/Dgraph.tests.e2e/**"],
+      "matchUpdateTypes": ["digest", "patch", "minor"],
+      "minimumReleaseAge": "3 days"
+    },
   ]
 }
