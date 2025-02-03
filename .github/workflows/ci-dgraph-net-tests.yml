@@ -15,10 +15,13 @@ on:
   schedule:
     - cron: 0 0 * * *
 
+permissions:
+  contents: read
+
 jobs:
   dotnet-tests:
     name: dotnet-tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Dgraph.net
         uses: actions/checkout@v4
