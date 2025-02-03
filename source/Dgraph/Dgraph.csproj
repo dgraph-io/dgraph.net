@@ -8,8 +8,8 @@
     <Product>.Net Dgraph Client</Product>
     <Description>Dgraph Client for .NET</Description>
     <Copyright>Dgraph Labs Inc</Copyright>
-    <PackageProjectUrl>https://github.com/dgraph-io/dgraph.net</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/dgraph-io/dgraph.net</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/hypermodeinc/dgraph.net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/hypermodeinc/dgraph.net</RepositoryUrl>
     <IncludeSymbols>True</IncludeSymbols>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageVersion>23.0.0-alpha</PackageVersion>
