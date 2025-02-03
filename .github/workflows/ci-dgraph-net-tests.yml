@@ -3,7 +3,7 @@ name: ci-dgraph-net-tests
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     types:
       - opened
@@ -11,9 +11,9 @@ on:
       - synchronize
       - ready_for_review
     branches:
-      - master
+      - main
   schedule:
-    - cron: "0 0 * * *" # run workflow daily
+    - cron: 0 0 * * *
 
 jobs:
   dotnet-tests:
