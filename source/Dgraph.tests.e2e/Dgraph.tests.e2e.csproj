@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Assent" Version="2.3.2" />
-    <PackageReference Include="FluentAssertions" Version="6.12.2" />
+    <PackageReference Include="FluentAssertions" Version="8.0.1" />
     <PackageReference Include="FluentResults" Version="3.16.0" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.1" />
