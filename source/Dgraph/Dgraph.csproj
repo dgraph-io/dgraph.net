@@ -4,10 +4,10 @@
     <PackageId>Dgraph</PackageId>
     <Title>Dgraph Client for .NET </Title>
     <Authors>Michael Compton, Ahmed El Bannan</Authors>
-    <Company>Dgraph Labs Inc</Company>
+    <Company>Hypermode Inc</Company>
     <Product>.Net Dgraph Client</Product>
     <Description>Dgraph Client for .NET</Description>
-    <Copyright>Dgraph Labs Inc</Copyright>
+    <Copyright>Hypermode Inc</Copyright>
     <PackageProjectUrl>https://github.com/hypermodeinc/dgraph.net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/hypermodeinc/dgraph.net</RepositoryUrl>
     <IncludeSymbols>True</IncludeSymbols>
